@@ -1,5 +1,5 @@
-import { encode } from '../src/bencode/encode';
-import { decode } from '../src/bencode/decode';
+import { encode } from '../../src/bencode/encode';
+import { decode } from '../../src/bencode/decode';
 
 describe('bencode#encode()', () => {
   // prevent the warning showing up in the test

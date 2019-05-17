@@ -16,7 +16,7 @@ function getIntFromBuffer(buffer: Buffer, start: number, end: number): number {
     const num = buffer[i];
 
     if (num < 58 && num >= 48) {
-      sum = sum * 10 + (num - 48);
+      sum = ((sum * 10) + (num - 48));
       continue;
     }
 
@@ -37,7 +37,7 @@ function getIntFromBuffer(buffer: Buffer, start: number, end: number): number {
       break;
     }
 
-    throw new Error(`not a number: buffer[' ${i} '] = ${num}`);
+    throw new Error(`not a number: buffer['${i}'] = ${num}`);
   }
 
   return sum * sign;
@@ -87,7 +87,7 @@ function next(state: State) {
   }
 }
 
-function find(state: State, chr) {
+function find(state: State, chr: number) {
   let i = state.position;
   const c = state.data.length;
   const d = state.data;
@@ -100,7 +100,6 @@ function find(state: State, chr) {
     i++;
   }
 
-  // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
   throw new Error(
     'Invalid data: Missing delimiter "' +
       String.fromCharCode(chr) +

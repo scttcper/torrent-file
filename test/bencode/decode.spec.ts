@@ -1,4 +1,4 @@
-import { decode } from '../src/bencode/decode';
+import { decode } from '../../src/bencode/decode';
 
 describe('bencode decode', () => {
   it('should be able to decode an integer', () => {
