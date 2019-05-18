@@ -132,7 +132,9 @@ function dict(state, buffers: Buffer[], data) {
 
   for (; j < kl; j++) {
     k = keys[j];
-    if (data[k] === null) {
+
+    // filter out null / undefined elements
+    if (data[k] === null || data[k] === undefined) {
       continue;
     }
 
