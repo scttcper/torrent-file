@@ -1,53 +1,49 @@
-# TypeScript Quickstart Library
+# torrent-file [![npm](https://img.shields.io/npm/v/@ctrl/torrent-file.svg?maxAge=3600)](https://www.npmjs.com/package/@ctrl/torrent-file) [![CircleCI](https://circleci.com/gh/TypeCtrl/torrent-file.svg?style=svg)](https://circleci.com/gh/TypeCtrl/torrent-file) [![coverage status](https://codecov.io/gh/typectrl/torrent-file/branch/master/graph/badge.svg)](https://codecov.io/gh/typectrl/torrent-file)
 
-A fork of [typescript-library-starter](https://github.com/alexjoverm/typescript-library-starter) with up to date packages and a few subsitutions.
+> Parse a torrent file and read encoded data. 
 
-## Use
+This project is based on [parse-torrent](https://www.npmjs.com/package/parse-torrent) and [node-bencode](https://github.com/themasch/node-bencode) to parse the data of a torrent file. This library implements its own bencode encoder and decoder and keeps dependencies to a minimum.
 
-```sh
-git clone https://github.com/TypeCtrl/typescript-quickstart-lib.git --depth=1 YOURFOLDERNAME
-cd YOURFOLDERNAME
-
-# Run npm install and write your library name when asked. That's it!
-npm install
+### Install
+```console
+npm install @ctrl/torrent-file
 ```
 
-## Features
+### API
 
-- Zero Setup
-- Jest test running
-- publishes for every platform http://2ality.com/2017/04/setting-up-multi-platform-packages.html
-- typescript type publishing `d.ts`
-- **[Prettier](https://github.com/prettier/prettier)** and eslint for code formatting and consistency
-- **[circleCI](https://circleci.com)** integration and **[codecov](https://codecov.io)** coverage reporting
-- **Automatic releases and changelog**, using [Semantic release](https://github.com/semantic-release/semantic-release)
-
-## Additional Setup
-
-#### Travis
-
-Add travis Environment Variables
-
-- **NPM** add `NPM_TOKEN` for publishing (see more)[https://github.com/semantic-release/npm#environment-variables]
-- **docs** add `GH_TOKEN` to publish docs to github pages
-
-#### Codecov
-
-Add project to codecov https://codecov.io/gh
-
-### NPM scripts
-
-- `npm test`: Run test suite
-- `npm run test:watch`: Run test suite in [interactive watch mode](http://facebook.github.io/jest/docs/cli.html#watch)
-- `npm run test:prod`: Run test and generate coverage
-- `npm run build`: Generate bundles and typings
-- `npm run build:docs`: builds docs
-- `npm run lint`: Lints code
-
-### Importing library
-
-You can import the public_api using
-
+##### info
+The content of the metainfo file.
 ```ts
-import { something } from 'mylib';
+import fs from 'fs';
+import { info } from '@ctrl/torrent-file';
+
+const torrentInfo = info(fs.readFileSync('myfile'));
+console.log({ torrentInfo });
 ```
+
+##### files
+data about the files described in the torrent file, includes hashes of the pieces
+```ts
+import fs from 'fs';
+import { files } from '@ctrl/torrent-file';
+
+const torrentFiles = files(fs.readFileSync('myfile'));
+console.log({ torrentFiles });
+```
+
+##### hash
+sha1 of torrent file info. This hash is commenly used by torrent clients as the ID of the torrent. It is async and sha1 encoding is handled by [crypto-hash](https://github.com/sindresorhus/crypto-hash)
+```ts
+import fs from 'fs';
+import { hash } from '@ctrl/torrent-file';
+
+(async () => {
+  const torrentHash = await hash(fs.readFileSync('myfile'));
+  console.log({ torrentHash });
+})()
+```
+
+
+### See Also
+[parse-torrent](https://www.npmjs.com/package/parse-torrent)  
+[node-bencode](https://github.com/themasch/node-bencode)  
