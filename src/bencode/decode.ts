@@ -112,7 +112,7 @@ function find(state: State, chr: number) {
 function dictionary(state: State) {
   state.position++;
 
-  const dict = {};
+  const dict: any = {};
 
   while (state.data[state.position] !== END_OF_TYPE) {
     dict[buffer(state)] = next(state);
