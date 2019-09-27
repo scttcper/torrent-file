@@ -10,10 +10,10 @@ describe('TorrentFile', () => {
   it('should have the same hash as parse-torrent', async () => {
     expect(await hash(fs.readFileSync(file))).toBe(parseTorrent(fs.readFileSync(file)).infoHash);
   });
-  it('should have the same name as parse-torrent', async () => {
+  it('should have the same name as parse-torrent', () => {
     expect(info(fs.readFileSync(file)).name).toEqual(parseTorrent(fs.readFileSync(file)).name);
   });
-  it('should parse files', async () => {
+  it('should parse files', () => {
     expect(files(fs.readFileSync(file)).files[0]).toEqual({
       length: 874512384,
       name: 'ubuntu-18.04.2-live-server-amd64.iso',
@@ -21,7 +21,7 @@ describe('TorrentFile', () => {
       path: 'ubuntu-18.04.2-live-server-amd64.iso',
     });
   });
-  it('should parse file pieces', async () => {
+  it('should parse file pieces', () => {
     expect(files(fs.readFileSync(file)).pieces).toHaveLength(1668);
   });
 });
