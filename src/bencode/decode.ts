@@ -74,7 +74,7 @@ export function decode(
   return next(state);
 }
 
-function next(state: State) {
+function next(state: State): any {
   switch (state.data[state.position]) {
     case DICTIONARY_START:
       return dictionary(state);
@@ -87,7 +87,7 @@ function next(state: State) {
   }
 }
 
-function find(state: State, chr: number) {
+function find(state: State, chr: number): number {
   let i = state.position;
   const c = state.data.length;
   const d = state.data;
@@ -109,7 +109,7 @@ function find(state: State, chr: number) {
   );
 }
 
-function dictionary(state: State) {
+function dictionary(state: State): any {
   state.position++;
 
   const dict: any = {};
@@ -123,7 +123,7 @@ function dictionary(state: State) {
   return dict;
 }
 
-function list(state: State) {
+function list(state: State): any[] {
   state.position++;
 
   const lst: any[] = [];
@@ -137,7 +137,7 @@ function list(state: State) {
   return lst;
 }
 
-function integer(state: State) {
+function integer(state: State): number {
   const end = find(state, END_OF_TYPE);
   const number = getIntFromBuffer(state.data, state.position + 1, end);
 
@@ -146,7 +146,7 @@ function integer(state: State) {
   return number;
 }
 
-function buffer(state: State) {
+function buffer(state: State): any {
   let sep = find(state, STRING_DELIM);
   const length = getIntFromBuffer(state.data, state.position, sep);
   const end = ++sep + length;

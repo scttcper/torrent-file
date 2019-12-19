@@ -27,7 +27,7 @@ export function encode(
   return result;
 }
 
-function getType(value) {
+function getType(value: Buffer | string | any[] | ArrayBuffer | number | boolean | object): string {
   if (Buffer.isBuffer(value)) {
     return 'buffer';
   }
@@ -55,12 +55,11 @@ function getType(value) {
   return typeof value;
 }
 
-function _encode(state, buffers: Buffer[], data) {
+function _encode(state, buffers: Buffer[], data): void {
   if (data === null) {
     return;
   }
 
-  // eslint-disable-next-line default-case
   switch (getType(data)) {
     case 'buffer':
       buffer(buffers, data);
@@ -86,6 +85,8 @@ function _encode(state, buffers: Buffer[], data) {
     case 'arraybuffer':
       buffer(buffers, Buffer.from(data));
       break;
+    default:
+      break;
   }
 }
 
@@ -93,16 +94,15 @@ const buffE = Buffer.from('e');
 const buffD = Buffer.from('d');
 const buffL = Buffer.from('l');
 
-function buffer(buffers: Buffer[], data) {
+function buffer(buffers: Buffer[], data: Buffer): void {
   buffers.push(Buffer.from(`${data.length}:`), data);
 }
 
-function string(buffers: Buffer[], data) {
-  // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+function string(buffers: Buffer[], data: string): void {
   buffers.push(Buffer.from(Buffer.byteLength(data) + ':' + data));
 }
 
-function number(state, buffers: Buffer[], data) {
+function number(state, buffers: Buffer[], data): void {
   const maxLo = 0x80000000;
   const hi = (data / maxLo) << 0;
   const lo = data % maxLo << 0;
@@ -120,7 +120,7 @@ function number(state, buffers: Buffer[], data) {
   }
 }
 
-function dict(state, buffers: Buffer[], data) {
+function dict(state, buffers: Buffer[], data): void {
   buffers.push(buffD);
 
   let j = 0;
@@ -145,7 +145,7 @@ function dict(state, buffers: Buffer[], data) {
   buffers.push(buffE);
 }
 
-function list(state, buffers: Buffer[], data) {
+function list(state, buffers: Buffer[], data): void {
   let i = 0;
   const c = data.length;
   buffers.push(buffL);

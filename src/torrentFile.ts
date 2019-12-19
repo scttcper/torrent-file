@@ -6,7 +6,7 @@ import { decode, encode } from './bencode';
 /**
  * sha1 of torrent file info. This hash is commenly used by torrent clients as the ID of the torrent.
  */
-export async function hash(file: Buffer) {
+export async function hash(file: Buffer): Promise<string> {
   const torrent: any = decode(file);
   return sha1(encode(torrent.info));
 }
@@ -70,11 +70,11 @@ export function files(file: Buffer): TorrentFileData {
   return result;
 }
 
-function sumLength(sum: number, file: any) {
+function sumLength(sum: number, file: any): number {
   return sum + file.length;
 }
 
-function splitPieces(buf: Buffer) {
+function splitPieces(buf: Buffer): string[] {
   const pieces: string[] = [];
   for (let i = 0; i < buf.length; i += 20) {
     pieces.push(buf.slice(i, i + 20).toString('hex'));
