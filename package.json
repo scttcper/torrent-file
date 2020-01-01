@@ -43,7 +43,7 @@
     "parse-torrent": "7.0.1",
     "semantic-release": "15.14.0",
     "ts-jest": "24.2.0",
-    "typescript": "3.7.3"
+    "typescript": "3.7.4"
   },
   "jest": {
     "preset": "ts-jest",
