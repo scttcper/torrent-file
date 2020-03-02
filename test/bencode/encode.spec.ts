@@ -44,7 +44,7 @@ describe('bencode#encode()', () => {
     expect(encode(0).toString()).toBe('i' + 0 + 'e');
 
     for (let exp = 1; exp < JAVASCRIPT_INT_BITS; ++exp) {
-      const val = Math.pow(2, exp);
+      const val = 2 ** exp;
       // try the positive and negative
       expect(encode(val).toString()).toBe('i' + val + 'e');
       expect(encode(-val).toString()).toBe('i-' + val + 'e');
