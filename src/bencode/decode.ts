@@ -5,7 +5,7 @@ const LIST_START = 0x6c; // 'l'
 const END_OF_TYPE = 0x65; // 'e'
 
 /**
- * replaces parseInt(buffer.toString('ascii', start, end)).
+ * Replaces parseInt(buffer.toString('ascii', start, end)).
  * For strings with less then ~30 charachters, this is actually a lot faster.
  */
 function getIntFromBuffer(buffer: Buffer, start: number, end: number): number {
@@ -56,7 +56,7 @@ interface State {
 export function decode(
   data: Buffer | string | null,
   encoding: string | null = null,
-): object | any[] | Buffer | string | number | null {
+): Record<string, unknown> | any[] | Buffer | string | number | null {
   const state: State = {
     bytes: 0,
     position: 0,

@@ -41,39 +41,39 @@ describe('bencode#encode()', () => {
   it('should be able to safely encode numbers between -/+ 2 ^ 53 (as ints)', () => {
     const JAVASCRIPT_INT_BITS = 53;
 
-    expect(encode(0).toString()).toBe('i' + 0 + 'e');
+    expect(encode(0).toString()).toBe(`i${0}e`);
 
     for (let exp = 1; exp < JAVASCRIPT_INT_BITS; ++exp) {
       const val = 2 ** exp;
       // try the positive and negative
-      expect(encode(val).toString()).toBe('i' + val + 'e');
-      expect(encode(-val).toString()).toBe('i-' + val + 'e');
+      expect(encode(val).toString()).toBe(`i${val}e`);
+      expect(encode(-val).toString()).toBe(`i-${val}e`);
 
       // try the value, one above and one below, both positive and negative
       const above = val + 1;
       const below = val - 1;
 
-      expect(encode(above).toString()).toBe('i' + above + 'e');
-      expect(encode(-above).toString()).toBe('i-' + above + 'e');
+      expect(encode(above).toString()).toBe(`i${above}e`);
+      expect(encode(-above).toString()).toBe(`i-${above}e`);
 
-      expect(encode(below).toString()).toBe('i' + below + 'e');
-      expect(encode(-below).toString()).toBe('i-' + below + 'e');
+      expect(encode(below).toString()).toBe(`i${below}e`);
+      expect(encode(-below).toString()).toBe(`i-${below}e`);
     }
 
-    expect(encode(Number.MAX_SAFE_INTEGER).toString()).toBe('i' + Number.MAX_SAFE_INTEGER + 'e');
-    expect(encode(-Number.MAX_SAFE_INTEGER).toString()).toBe('i-' + Number.MAX_SAFE_INTEGER + 'e');
+    expect(encode(Number.MAX_SAFE_INTEGER).toString()).toBe(`i${Number.MAX_SAFE_INTEGER}e`);
+    expect(encode(-Number.MAX_SAFE_INTEGER).toString()).toBe(`i-${Number.MAX_SAFE_INTEGER}e`);
   });
   it('should be able to encode a previously problematice 64 bit int', () => {
-    expect(encode(2433088826).toString()).toBe('i' + 2433088826 + 'e');
+    expect(encode(2433088826).toString()).toBe(`i${2433088826}e`);
   });
   it('should be able to encode a negative 64 bit int', () => {
-    expect(encode(-0xffffffff).toString()).toBe('i-' + 0xffffffff + 'e');
+    expect(encode(-0xffffffff).toString()).toBe(`i-${0xffffffff}e`);
   });
   it('should be able to encode a positive 64 bit float (as int)', () => {
-    expect(encode(0xffffffff + 0.5, undefined, undefined, true).toString()).toBe('i' + 0xffffffff + 'e');
+    expect(encode(0xffffffff + 0.5, undefined, undefined, true).toString()).toBe(`i${0xffffffff}e`);
   });
   it('should be able to encode a negative 64 bit float (as int)', () => {
-    expect(encode(-0xffffffff - 0.5, undefined, undefined, true).toString()).toBe('i-' + 0xffffffff + 'e');
+    expect(encode(-0xffffffff - 0.5, undefined, undefined, true).toString()).toBe(`i-${0xffffffff}e`);
   });
   it('should be able to encode a string', () => {
     expect(encode('asdf').toString()).toBe('4:asdf');
@@ -94,19 +94,15 @@ describe('bencode#encode()', () => {
   });
 
   it('should encode new Number(1) as number', () => {
-    // eslint-disable-next-line no-new-wrappers
-    const data = new Number(1);
+    const data = Number(1);
     const result = decode(encode(data, undefined, undefined, true));
-    const expected = 1;
-    expect(result).toEqual(expected);
+    expect(result).toEqual(1);
   });
 
   it('should encode new Boolean(true) as number', () => {
-    // eslint-disable-next-line no-new-wrappers
-    const data = new Boolean(true);
+    const data = true;
     const result = decode(encode(data, undefined, undefined, true));
-    const expected = 1;
-    expect(result).toEqual(expected);
+    expect(result).toEqual(1);
   });
 
   it('should encode Uint8Array as buffer', () => {

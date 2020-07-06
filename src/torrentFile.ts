@@ -46,7 +46,7 @@ export function files(file: Buffer): TorrentFileData {
     pieces: [],
   };
 
-  const files = torrent.info.files || [torrent.info];
+  const files: string[] = torrent.info.files || [torrent.info];
   const name: string = (torrent.info['name.utf-8'] || torrent.info.name).toString();
   result.files = files.map((file: any, i) => {
     const parts: string[] = ([] as any[])
@@ -70,7 +70,7 @@ export function files(file: Buffer): TorrentFileData {
   return result;
 }
 
-function sumLength(sum: number, file: any): number {
+function sumLength(sum: number, file: string): number {
   return sum + file.length;
 }
 

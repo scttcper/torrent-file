@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/ban-types */
 import isArrayBuffer from 'lodash.isarraybuffer';
 
 /**
  * Encodes data in bencode.
  */
 export function encode(
-  data: Buffer | string | any[] | ArrayBuffer | number | boolean | object,
+  data: Buffer | string | any[] | ArrayBuffer | number | boolean | Record<string, unknown> | object,
   buffer?,
   offset?,
   disableFloatConversionWarning = false,
@@ -27,7 +28,7 @@ export function encode(
   return result;
 }
 
-function getType(value: Buffer | string | any[] | ArrayBuffer | number | boolean | object): string {
+function getType(value: Buffer | string | any[] | ArrayBuffer | number | boolean | Record<string, unknown> | object): string {
   if (Buffer.isBuffer(value)) {
     return 'buffer';
   }
@@ -55,7 +56,7 @@ function getType(value: Buffer | string | any[] | ArrayBuffer | number | boolean
   return typeof value;
 }
 
-function _encode(state, buffers: Buffer[], data): void {
+function _encode(state: any, buffers: Buffer[], data: any): void {
   if (data === null) {
     return;
   }
@@ -99,32 +100,32 @@ function buffer(buffers: Buffer[], data: Buffer): void {
 }
 
 function string(buffers: Buffer[], data: string): void {
-  buffers.push(Buffer.from(Buffer.byteLength(data) + ':' + data));
+  buffers.push(Buffer.from(`${Buffer.byteLength(data)}:${data}`));
 }
 
-function number(state, buffers: Buffer[], data): void {
+function number(state: any, buffers: Buffer[], data: number): void {
   const maxLo = 0x80000000;
   const hi = (data / maxLo) << 0;
   const lo = data % maxLo << 0;
   const val = (hi * maxLo) + lo;
 
-  buffers.push(Buffer.from('i' + val + 'e'));
+  buffers.push(Buffer.from(`i${val}e`));
 
   if (val !== data && !state.disableFloatConversionWarning) {
     state.disableFloatConversionWarning = true;
     console.warn(
-      'WARNING: Possible data corruption detected with value "' + data + '":',
-      'Bencoding only defines support for integers, value was converted to "' + val + '"',
+      `WARNING: Possible data corruption detected with value "${data}":`,
+      `Bencoding only defines support for integers, value was converted to "${val}"`,
     );
     console.trace();
   }
 }
 
-function dict(state, buffers: Buffer[], data): void {
+function dict(state: any, buffers: Buffer[], data: Record<string, unknown>): void {
   buffers.push(buffD);
 
   let j = 0;
-  let k;
+  let k: string | undefined;
   // sorted dicts
   // eslint-disable-next-line @typescript-eslint/require-array-sort-compare
   const keys = Object.keys(data).sort();
@@ -145,7 +146,7 @@ function dict(state, buffers: Buffer[], data): void {
   buffers.push(buffE);
 }
 
-function list(state, buffers: Buffer[], data): void {
+function list(state: any, buffers: Buffer[], data): void {
   let i = 0;
   const c = data.length;
   buffers.push(buffL);
