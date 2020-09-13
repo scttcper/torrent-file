@@ -127,7 +127,6 @@ function dict(state: any, buffers: Buffer[], data: Record<string, unknown>): voi
   let j = 0;
   let k: string | undefined;
   // sorted dicts
-  // eslint-disable-next-line @typescript-eslint/require-array-sort-compare
   const keys = Object.keys(data).sort();
   const kl = keys.length;
 
