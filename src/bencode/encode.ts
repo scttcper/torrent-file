@@ -28,7 +28,17 @@ export function encode(
   return result;
 }
 
-function getType(value: Buffer | string | any[] | ArrayBuffer | number | boolean | Record<string, unknown> | object): string {
+function getType(
+  value:
+    | Buffer
+    | string
+    | any[]
+    | ArrayBuffer
+    | number
+    | boolean
+    | Record<string, unknown>
+    | object,
+): string {
   if (Buffer.isBuffer(value)) {
     return 'buffer';
   }
@@ -107,7 +117,7 @@ function number(state: any, buffers: Buffer[], data: number): void {
   const maxLo = 0x80000000;
   const hi = (data / maxLo) << 0;
   const lo = data % maxLo << 0;
-  const val = (hi * maxLo) + lo;
+  const val = hi * maxLo + lo;
 
   buffers.push(Buffer.from(`i${val}e`));
 

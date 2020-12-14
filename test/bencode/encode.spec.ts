@@ -73,7 +73,9 @@ describe('bencode#encode()', () => {
     expect(encode(0xffffffff + 0.5, undefined, undefined, true).toString()).toBe(`i${0xffffffff}e`);
   });
   it('should be able to encode a negative 64 bit float (as int)', () => {
-    expect(encode(-0xffffffff - 0.5, undefined, undefined, true).toString()).toBe(`i-${0xffffffff}e`);
+    expect(encode(-0xffffffff - 0.5, undefined, undefined, true).toString()).toBe(
+      `i-${0xffffffff}e`,
+    );
   });
   it('should be able to encode a string', () => {
     expect(encode('asdf').toString()).toBe('4:asdf');
@@ -113,14 +115,32 @@ describe('bencode#encode()', () => {
   });
 
   it('should encode Uint32Array as buffer', () => {
-    const data = new Uint32Array([0xF, 0xFF, 0xFFF, 0xFFFF, 0xFFFFF, 0xFFFFFF, 0xFFFFFFF, 0xFFFFFFFF]);
+    const data = new Uint32Array([
+      0xf,
+      0xff,
+      0xfff,
+      0xffff,
+      0xfffff,
+      0xffffff,
+      0xfffffff,
+      0xffffffff,
+    ]);
     const result = decode(encode(data));
     const expected = Buffer.from(data.buffer);
     expect(result).toEqual(expected);
   });
 
   it('should encode ArrayBuffer as buffer', () => {
-    const data = new Uint32Array([0xF, 0xFF, 0xFFF, 0xFFFF, 0xFFFFF, 0xFFFFFF, 0xFFFFFFF, 0xFFFFFFFF]);
+    const data = new Uint32Array([
+      0xf,
+      0xff,
+      0xfff,
+      0xffff,
+      0xfffff,
+      0xffffff,
+      0xfffffff,
+      0xffffffff,
+    ]);
     const result = decode(encode(data.buffer));
     const expected = Buffer.from(data.buffer);
     expect(result).toEqual(expected);

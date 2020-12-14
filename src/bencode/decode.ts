@@ -16,7 +16,7 @@ function getIntFromBuffer(buffer: Buffer, start: number, end: number): number {
     const num = buffer[i];
 
     if (num < 58 && num >= 48) {
-      sum = ((sum * 10) + (num - 48));
+      sum = sum * 10 + (num - 48);
       continue;
     }
 
@@ -153,7 +153,7 @@ function buffer(state: State): any {
 
   state.position = end;
 
-  return state.encoding ?
-    state.data.toString(state.encoding, sep, end) :
-    state.data.slice(sep, end);
+  return state.encoding
+    ? state.data.toString(state.encoding, sep, end)
+    : state.data.slice(sep, end);
 }
