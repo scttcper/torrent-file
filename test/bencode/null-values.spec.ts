@@ -1,3 +1,5 @@
+import { describe, it, expect } from '@jest/globals';
+
 import { decode, encode } from '../../src/bencode';
 
 describe('Data with null values', () => {

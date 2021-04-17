@@ -1,3 +1,5 @@
+import { describe, it, expect } from '@jest/globals';
+
 import { encode, decode } from '../../src/bencode';
 
 describe('abstract encoding', () => {

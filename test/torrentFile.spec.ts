@@ -1,6 +1,7 @@
 import fs from 'fs';
 import parseTorrent from 'parse-torrent';
 import path from 'path';
+import { describe, it, expect } from '@jest/globals';
 
 import { hash, info, files } from '../src/torrentFile';
 

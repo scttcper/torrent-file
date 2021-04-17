@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'fs';
+import { describe, it, expect } from '@jest/globals';
 
 import { decode } from '../../src/bencode';
 
