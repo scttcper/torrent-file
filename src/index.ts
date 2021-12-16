@@ -1,2 +1,2 @@
-export * from './bencode';
-export * from './torrentFile';
+export * from './bencode/index.js';
+export * from './torrentFile.js';
