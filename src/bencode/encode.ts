@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import isArrayBuffer from 'lodash.isarraybuffer';
+
+import { isArrayBuffer } from '../isArrayBuffer.js';
 
 /**
  * Encodes data in bencode.
  */
 export function encode(
   data: Buffer | string | any[] | ArrayBuffer | number | boolean | Record<string, unknown> | object,
-  buffer?,
-  offset?,
+  buffer?: unknown,
+  offset?: number,
   disableFloatConversionWarning = false,
 ): Buffer {
   const buffers: Buffer[] = [];
@@ -134,15 +135,9 @@ function number(state: any, buffers: Buffer[], data: number): void {
 function dict(state: any, buffers: Buffer[], data: Record<string, unknown>): void {
   buffers.push(buffD);
 
-  let j = 0;
-  let k: string | undefined;
   // sorted dicts
   const keys = Object.keys(data).sort();
-  const kl = keys.length;
-
-  for (; j < kl; j++) {
-    k = keys[j];
-
+  for (const k of keys) {
     // filter out null / undefined elements
     if (data[k] === null || data[k] === undefined) {
       continue;
@@ -155,7 +150,7 @@ function dict(state: any, buffers: Buffer[], data: Record<string, unknown>): voi
   buffers.push(buffE);
 }
 
-function list(state: any, buffers: Buffer[], data): void {
+function list(state: any, buffers: Buffer[], data: any[]): void {
   let i = 0;
   const c = data.length;
   buffers.push(buffL);

@@ -15,6 +15,10 @@ function getIntFromBuffer(buffer: Buffer, start: number, end: number): number {
   for (let i = start; i < end; i++) {
     const num = buffer[i];
 
+    if (typeof num === 'undefined') {
+      continue;
+    }
+
     if (num < 58 && num >= 48) {
       sum = sum * 10 + (num - 48);
       continue;

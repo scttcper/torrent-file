@@ -1,7 +1,8 @@
-import { sha1 } from 'crypto-hash';
-import { join, sep } from 'path';
+import { join, sep } from 'node:path';
 
-import { decode, encode } from './bencode';
+import { sha1 } from 'crypto-hash';
+
+import { decode, encode } from './bencode/index.js';
 
 /**
  * sha1 of torrent file info. This hash is commenly used by torrent clients as the ID of the torrent.
@@ -49,12 +50,12 @@ export function files(file: Buffer): TorrentFileData {
   const files: string[] = torrent.info.files || [torrent.info];
   const name: string = (torrent.info['name.utf-8'] || torrent.info.name).toString();
   result.files = files.map((file: any, i) => {
-    const parts: string[] = ([] as any[])
-      .concat(name, file['path.utf-8'] || file.path || ([] as any[]))
-      .map(p => p.toString());
+    const parts: string[] = [name, ...(file['path.utf-8'] || file.path || [])].map(p =>
+      p.toString(),
+    );
     return {
       path: join(sep, ...parts).slice(1),
-      name: parts[parts.length - 1],
+      name: parts[parts.length - 1]!,
       length: file.length,
       offset: files.slice(0, i).reduce(sumLength, 0),
     };
@@ -65,7 +66,7 @@ export function files(file: Buffer): TorrentFileData {
   const lastFile = result.files[result.files.length - 1];
 
   result.lastPieceLength =
-    (lastFile.offset + lastFile.length) % result.pieceLength || result.pieceLength;
+    (lastFile && (lastFile.offset + lastFile.length) % result.pieceLength) || result.pieceLength;
   result.pieces = splitPieces(torrent.info.pieces);
   return result;
 }
@@ -141,8 +142,8 @@ export function info(file: Buffer): TorrentInfo {
     torrent['announce-list'] &&
     torrent['announce-list'].length > 0
   ) {
-    torrent['announce-list'].forEach(urls => {
-      urls.forEach(url => {
+    torrent['announce-list'].forEach((urls: any) => {
+      urls.forEach((url: any) => {
         result.announce.push(url.toString());
       });
     });
@@ -160,7 +161,7 @@ export function info(file: Buffer): TorrentInfo {
     torrent['url-list'] = torrent['url-list'].length > 0 ? [torrent['url-list']] : [];
   }
 
-  result.urlList = (torrent['url-list'] || []).map(url => url.toString());
+  result.urlList = (torrent['url-list'] || []).map((url: any) => url.toString());
   if (result.urlList.length) {
     result.urlList = Array.from(new Set(result.urlList));
   }
