@@ -1,7 +1,6 @@
 {
   "extends": "@sindresorhus/tsconfig",
   "compilerOptions": {
-    "lib": ["ES2021"],
     "outDir": "dist"
   }
 }

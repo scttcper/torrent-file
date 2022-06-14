@@ -1,53 +1,47 @@
-import test from 'ava';
+import { expect, it } from 'vitest';
 
 import { decode, encode } from '../../src/bencode/index.js';
 
-test('should be able to decode an integer', t => {
-  t.is(decode('i123e', 'utf8'), 123);
-  t.is(decode('i-123e', 'utf8'), -123);
+it('should be able to decode an integer', () => {
+  expect(decode('i123e')).toBe(123);
+  expect(decode('i-123e')).toBe(-123);
 });
-// test('should throw an error when trying to decode a broken integer', () => {
-//   expect(() => decode('i12+3e', 'utf8')).toThrowError(/not a number/);
-//   expect(() => decode('i-1+23e', 'utf8')).toThrowError(/not a number/);
+// it('should be throw an error when trying to decode a broken integer', () => {
+//   expect(() => decode('i12+3e')).toThrow(/not a number/);
+//   expect(() => decode('i-1+23e')).toThrow(/not a number/);
 // });
-test('should be able to decode a float (as int)', t => {
-  t.is(decode('i12.3e', 'utf8'), 12);
-  t.is(decode('i-12.3e', 'utf8'), -12);
+it('should be able to decode a float (as int)', () => {
+  expect(decode('i12.3e')).toBe(12);
+  expect(decode('i-12.3e')).toBe(-12);
 });
-// test('should throw an error when trying to decode a broken float', () => {
-//   expect(() => decode('i1+2.3e', 'utf8')).toThrowError(/not a number/);
-//   expect(() => decode('i-1+2.3e', 'utf8')).toThrowError(/not a number/);
+// it('should be throw an error when trying to decode a broken float', () => {
+//   expect(() => decode('i1+2.3e')).toThrow(/not a number/);
+//   expect(() => decode('i-1+2.3e')).toThrow(/not a number/);
 // });
-test('should be able to decode a string', t => {
-  t.is(decode('5:asdfe', 'utf8'), 'asdfe');
-});
-test('should be able to decode a dictionary', t => {
-  t.deepEqual(decode('d3:cow3:moo4:spam4:eggse', 'utf8'), {
-    cow: 'moo',
-    spam: 'eggs',
+
+it('should be able to decode a dictionary', () => {
+  expect(decode('d3:cow3:moo4:spam4:eggse')).toEqual({
+    cow: Buffer.from('moo'),
+    spam: Buffer.from('eggs'),
   });
-  t.deepEqual(decode('d4:spaml1:a1:bee', 'utf8'), { spam: ['a', 'b'] });
-  t.deepEqual(
-    decode(
-      'd9:publisher3:bob17:publisher-webpage15:www.example.com18:publisher.location4:homee',
-      'utf8',
-    ),
-    {
-      publisher: 'bob',
-      'publisher-webpage': 'www.example.com',
-      'publisher.location': 'home',
-    },
-  );
+  expect(decode('d4:spaml1:a1:bee')).toEqual({ spam: [Buffer.from('a'), Buffer.from('b')] });
+  expect(
+    decode('d9:publisher3:bob17:publisher-webpage15:www.example.com18:publisher.location4:homee'),
+  ).toEqual({
+    publisher: Buffer.from('bob'),
+    'publisher-webpage': Buffer.from('www.example.com'),
+    'publisher.location': Buffer.from('home'),
+  });
 });
 
-test('should be able to decode a list', t => {
-  t.deepEqual(decode('l4:spam4:eggse', 'utf8'), ['spam', 'eggs']);
+it('should be able to decode a list', () => {
+  expect(decode('l4:spam4:eggse')).toEqual([Buffer.from('spam'), Buffer.from('eggs')]);
 });
-test('should return the correct type', t => {
-  t.is(typeof decode('4:öö', 'utf8'), 'string');
+it('should return the correct type', () => {
+  expect(Buffer.isBuffer(decode('4:öö'))).toBeTruthy();
 });
 
-test('should be able to decode stuff in dicts (issue #12)', t => {
+it('should be able to decode stuff in dicts (issue #12)', () => {
   const someData = {
     string: 'Hello World',
     integer: 12345,
@@ -58,8 +52,8 @@ test('should be able to decode stuff in dicts (issue #12)', t => {
   };
   const result = encode(someData);
   const dat: any = decode(result, 'utf8');
-  t.is(dat.integer, 12345);
-  t.deepEqual(dat.string, 'Hello World');
-  t.deepEqual(dat.dict.key, 'This is a string within a dictionary');
-  t.deepEqual(dat.list, [1, 2, 3, 4, 'string', 5, {}]);
+  expect(dat.integer).toBe(12345);
+  expect(dat.string).toEqual('Hello World');
+  expect(dat.dict.key).toEqual('This is a string within a dictionary');
+  expect(dat.list).toEqual([1, 2, 3, 4, 'string', 5, {}]);
 });

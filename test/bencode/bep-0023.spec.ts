@@ -1,16 +1,16 @@
 import fs from 'node:fs/promises';
 import { URL } from 'node:url';
 
-import test from 'ava';
+import { expect, it } from 'vitest';
 
 import { decode } from '../../src/bencode/index.js';
 
 // @see http://www.bittorrent.org/beps/bep_0023.html
-test('should be able to handle an compacted peer announce', async t => {
+it('should be able to handle an compacted peer announce', async () => {
   const announce = await fs.readFile(new URL('./announce-compacted-peers.bin', import.meta.url));
   const data = decode(announce);
 
-  t.deepEqual(data, {
+  expect(data).toEqual({
     complete: 4,
     incomplete: 3,
     interval: 1800,
@@ -22,11 +22,11 @@ test('should be able to handle an compacted peer announce', async t => {
   });
 });
 
-test('should be able to handle an compacted peer announce when decoding strings', async t => {
+it('should be able to handle an compacted peer announce when decoding strings', async () => {
   const announce = await fs.readFile(new URL('./announce-compacted-peers.bin', import.meta.url));
   const data = decode(announce, 'utf8');
 
-  t.deepEqual(data, {
+  expect(data).toEqual({
     complete: 4,
     incomplete: 3,
     interval: 1800,
