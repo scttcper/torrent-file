@@ -18,40 +18,30 @@
     "lint:fix": "eslint --fix --ext .ts .",
     "prepare": "npm run build",
     "build": "tsc",
-    "test": "ava",
-    "test:watch": "ava --watch",
-    "test:ci": "c8 --reporter=text --reporter=lcov ava"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ci": "vitest run --coverage --reporter=default --reporter=junit --outputFile=./junit.xml"
   },
   "dependencies": {
     "crypto-hash": "^2.0.1"
   },
   "devDependencies": {
-    "@sindresorhus/tsconfig": "2.0.0",
-    "@ctrl/eslint-config": "3.1.4",
-    "@types/node": "17.0.0",
+    "@sindresorhus/tsconfig": "3.0.1",
+    "@ctrl/eslint-config": "3.4.5",
+    "@types/node": "17.0.42",
     "@types/parse-torrent": "5.8.4",
-    "ava": "4.0.0-rc.1",
-    "c8": "7.10.0",
-    "tsm": "2.2.1",
-    "parse-torrent": "9.1.4",
-    "typescript": "4.5.4"
-  },
-  "ava": {
-    "files": [
-      "test/**/*.spec.ts"
-    ],
-    "extensions": {
-      "ts": "module"
-    },
-    "nodeArguments": [
-      "--loader=tsm"
-    ]
+    "c8": "7.11.3",
+    "parse-torrent": "9.1.5",
+    "typescript": "4.7.3",
+    "vitest": "0.14.2"
   },
   "publishConfig": {
     "access": "public"
   },
   "release": {
-    "branch": "master"
+    "branches": [
+      "master"
+    ]
   },
   "engines": {
     "node": ">=14.16"

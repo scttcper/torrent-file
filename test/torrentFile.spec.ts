@@ -1,27 +1,27 @@
-import fs from 'node:fs/promises';
+import fs from 'node:fs';
 import { URL } from 'node:url';
 
-import test from 'ava';
 import parseTorrent from 'parse-torrent';
+import { expect, it } from 'vitest';
 
 import { files, hash, info } from '../src/index.js';
 
 const file = new URL('./ubuntu-18.04.2-live-server-amd64.iso.torrent', import.meta.url);
 
-test('should have the same hash as parse-torrent', async t => {
-  t.is(await hash(await fs.readFile(file)), parseTorrent(await fs.readFile(file)).infoHash!);
+it('should have the same hash as parse-torrent', async () => {
+  expect(await hash(fs.readFileSync(file))).toBe(parseTorrent(fs.readFileSync(file)).infoHash);
 });
-test('should have the same name as parse-torrent', async t => {
-  t.is(info(await fs.readFile(file)).name, parseTorrent(await fs.readFile(file)).name as string);
+it('should have the same name as parse-torrent', () => {
+  expect(info(fs.readFileSync(file)).name).toEqual(parseTorrent(fs.readFileSync(file)).name);
 });
-test('should parse files', async t => {
-  t.deepEqual(files(await fs.readFile(file)).files[0], {
+it('should parse files', () => {
+  expect(files(fs.readFileSync(file)).files[0]).toEqual({
     length: 874512384,
     name: 'ubuntu-18.04.2-live-server-amd64.iso',
     offset: 0,
     path: 'ubuntu-18.04.2-live-server-amd64.iso',
   });
 });
-test('should parse file pieces', async t => {
-  t.is(files(await fs.readFile(file)).pieces.length, 1668);
+it('should parse file pieces', () => {
+  expect(files(fs.readFileSync(file)).pieces).toHaveLength(1668);
 });
