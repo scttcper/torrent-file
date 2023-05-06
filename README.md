@@ -1,4 +1,4 @@
-# torrent-file [![npm](https://badgen.net/npm/v/@ctrl/torrent-file)](https://www.npmjs.com/package/@ctrl/torrent-file) [![CircleCI](https://badgen.net/circleci/github/scttcper/torrent-file)](https://circleci.com/gh/scttcper/torrent-file) [![coverage](https://badgen.net/codecov/c/github/scttcper/torrent-file)](https://codecov.io/gh/scttcper/torrent-file) [![bundlesize](https://badgen.net/bundlephobia/min/@ctrl/torrent-file)](https://bundlephobia.com/result?p=@ctrl/torrent-file)
+# torrent-file [![npm](https://badgen.net/npm/v/@ctrl/torrent-file)](https://www.npmjs.com/package/@ctrl/torrent-file) [![coverage](https://badgen.net/codecov/c/github/scttcper/torrent-file)](https://codecov.io/gh/scttcper/torrent-file) [![bundlesize](https://badgen.net/bundlephobia/min/@ctrl/torrent-file)](https://bundlephobia.com/result?p=@ctrl/torrent-file)
 
 > Parse a torrent file and read encoded data. 
 
