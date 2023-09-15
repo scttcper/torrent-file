@@ -4,8 +4,8 @@ export default defineConfig({
   test: {
     threads: false,
     coverage: {
-      provider: 'c8',
       reporter: ['text', 'json', 'html'],
+      provider: 'v8',
     },
   },
 });
