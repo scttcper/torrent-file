@@ -1,164 +1,153 @@
-const INTEGER_START = 0x69; // 'i'
-const STRING_DELIM = 0x3a; // ':'
-const DICTIONARY_START = 0x64; // 'd'
-const LIST_START = 0x6c; // 'l'
-const END_OF_TYPE = 0x65; // 'e'
+import type { bencodeValue } from './encode.js';
+import { isValidUTF8 } from './utils.js';
 
-/**
- * Replaces parseInt(buffer.toString('ascii', start, end)).
- * For strings with less then ~30 charachters, this is actually a lot faster.
- */
-function getIntFromBuffer(buffer: Buffer, start: number, end: number): number {
-  let sum = 0;
-  let sign = 1;
+const te = new TextEncoder();
+const td = new TextDecoder();
 
-  for (let i = start; i < end; i++) {
-    const num = buffer[i];
+class Decoder {
+  idx = 0;
 
-    if (typeof num === 'undefined') {
-      continue;
+  constructor(public buf: Uint8Array) {}
+
+  readByte(): string | null {
+    if (this.idx >= this.buf.length) {
+      return null;
     }
 
-    if (num < 58 && num >= 48) {
-      // eslint-disable-next-line no-mixed-operators
-      sum = sum * 10 + (num - 48);
-      continue;
+    return String.fromCharCode(this.buf[this.idx++]!);
+  }
+
+  readBytes(length: number): Uint8Array {
+    if (this.idx + length > this.buf.length) {
+      throw new Error(`could not read ${length} bytes, insufficient content`);
     }
 
-    if (i === start && num === 43) {
-      // +
-      continue;
+    const result = this.buf.slice(this.idx, this.idx + length);
+    this.idx += length;
+    return result;
+  }
+
+  readUntil(char: string): Uint8Array {
+    const targetIdx = this.buf.indexOf(char.charCodeAt(0), this.idx);
+    if (targetIdx === -1) {
+      throw new Error(`could not find terminated char: ${char}`);
     }
 
-    if (i === start && num === 45) {
-      // -
-      sign = -1;
-      continue;
+    const result = this.buf.slice(this.idx, targetIdx);
+    this.idx = targetIdx;
+    return result;
+  }
+
+  readNumber(): number {
+    const buf = this.readUntil(':');
+    return parseInt(td.decode(buf), 10);
+  }
+
+  peekByte(): string {
+    if (this.idx >= this.buf.length) {
+      return '';
     }
 
-    if (num === 46) {
-      // .
-      // its a float. break here.
-      break;
+    const result = this.readByte();
+    if (result === null) {
+      return '';
     }
 
-    throw new Error(`not a number: buffer['${i}'] = ${num}`);
+    this.idx--;
+    return result;
   }
 
-  return sum * sign;
-}
-
-interface State {
-  position: number;
-  bytes: number;
-  data: any;
-  encoding: string | null;
-}
-
-/**
- * Decodes bencoded data
- */
-export function decode(
-  data: Buffer | string | null,
-  encoding: string | null = null,
-): Record<string, unknown> | any[] | Buffer | string | number | null {
-  const state: State = {
-    bytes: 0,
-    position: 0,
-    data: null,
-    encoding,
-  };
-
-  if (data === null || data.length === 0) {
-    return null;
+  assertByte(expected: string) {
+    const b = this.readByte();
+    if (b !== expected) {
+      throw new Error(`expecte ${expected}, got ${b}`);
+    }
   }
 
-  state.data = Buffer.isBuffer(data) ? data : Buffer.from(data);
-  state.bytes = state.data.length;
+  next(): bencodeValue {
+    switch (this.peekByte()) {
+      case 'd': {
+        return this.nextDictionary();
+      }
 
-  return next(state);
-}
+      case 'l': {
+        return this.nextList();
+      }
 
-function next(state: State): any {
-  switch (state.data[state.position]) {
-    case DICTIONARY_START:
-      return dictionary(state);
-    case LIST_START:
-      return list(state);
-    case INTEGER_START:
-      return integer(state);
-    default:
-      return buffer(state);
+      case 'i': {
+        return this.nextNumber();
+      }
+
+      default: {
+        return this.nextBufOrString();
+      }
+    }
   }
-}
 
-function find(state: State, chr: number): number {
-  let i = state.position;
-  const c = state.data.length;
-  const d = state.data;
+  nextBufOrString(): string | Uint8Array {
+    const length = this.readNumber();
+    this.assertByte(':');
+    const buf = this.readBytes(length);
+    return isValidUTF8(buf) ? td.decode(buf) : buf;
+  }
 
-  while (i < c) {
-    if (d[i] === chr) {
-      return i;
+  nextString(): string {
+    const length = this.readNumber();
+    this.assertByte(':');
+    return td.decode(this.readBytes(length));
+  }
+
+  nextNumber(): number {
+    this.assertByte('i');
+    const content = td.decode(this.readUntil('e'));
+    this.assertByte('e');
+    const result = Number(content);
+
+    if (isNaN(result)) {
+      throw new Error(`not a number: ${content}`);
     }
 
-    i++;
+    return result;
   }
 
-  throw new Error(
-    'Invalid data: Missing delimiter "' +
-      String.fromCharCode(chr) +
-      '" [0x' +
-      chr.toString(16) +
-      ']',
-  );
-}
+  nextList(): bencodeValue[] {
+    this.assertByte('l');
+    const result = [];
 
-function dictionary(state: State): any {
-  state.position++;
+    while (this.peekByte() !== 'e') {
+      result.push(this.next());
+    }
 
-  const dict: any = {};
-
-  while (state.data[state.position] !== END_OF_TYPE) {
-    dict[buffer(state)] = next(state);
+    this.assertByte('e');
+    return result;
   }
 
-  state.position++;
+  nextDictionary(): Record<string, bencodeValue> {
+    this.assertByte('d');
+    const result: Record<string, bencodeValue> = {};
 
-  return dict;
+    while (this.peekByte() !== 'e') {
+      result[this.nextString()] = this.next();
+    }
+
+    this.assertByte('e');
+
+    return result;
+  }
 }
 
-function list(state: State): any[] {
-  state.position++;
-
-  const lst: any[] = [];
-
-  while (state.data[state.position] !== END_OF_TYPE) {
-    lst.push(next(state));
+export const decode = (payload: ArrayBufferView | ArrayBuffer | string): bencodeValue => {
+  let buf;
+  if (typeof payload === 'string') {
+    buf = te.encode(payload);
+  } else if (payload instanceof ArrayBuffer) {
+    buf = new Uint8Array(payload);
+  } else if ('buffer' in payload) {
+    buf = new Uint8Array(payload.buffer);
+  } else {
+    throw new Error(`invalid payload type`);
   }
 
-  state.position++;
-
-  return lst;
-}
-
-function integer(state: State): number {
-  const end = find(state, END_OF_TYPE);
-  const number = getIntFromBuffer(state.data, state.position + 1, end);
-
-  state.position += end + 1 - state.position;
-
-  return number;
-}
-
-function buffer(state: State): any {
-  let sep = find(state, STRING_DELIM);
-  const length = getIntFromBuffer(state.data, state.position, sep);
-  const end = ++sep + length;
-
-  state.position = end;
-
-  return state.encoding
-    ? state.data.toString(state.encoding, sep, end)
-    : state.data.slice(sep, end);
-}
+  const decoder = new Decoder(buf);
+  return decoder.next();
+};

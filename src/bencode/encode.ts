@@ -1,167 +1,103 @@
-/* eslint-disable @typescript-eslint/ban-types */
+import { concatUint8Arrays, stringToUint8Array } from 'uint8array-extras';
 
-import { isArrayBuffer } from '../isArrayBuffer.js';
+import { cmpRawString } from './utils.js';
 
-/**
- * Encodes data in bencode.
- */
-export function encode(
-  data: Buffer | string | any[] | ArrayBuffer | number | boolean | Record<string, unknown> | object,
-  buffer?: unknown,
-  offset?: number,
-  disableFloatConversionWarning = false,
-): Buffer {
-  const buffers: Buffer[] = [];
-  const state: any = {
-    bytes: -1,
-    disableFloatConversionWarning,
-  };
+export type bencodeValue =
+  | string
+  | Uint8Array
+  | number
+  | { [key: string]: bencodeValue }
+  | bencodeValue[];
 
-  _encode(state, buffers, data);
-  const result = Buffer.concat(buffers);
-  state.bytes = result.length;
+const te = new TextEncoder();
 
-  if (Buffer.isBuffer(buffer)) {
-    result.copy(buffer, offset);
-    return buffer;
-  }
+const encodeString = (str: string): Uint8Array => {
+  const lengthBytes = new TextEncoder().encode(str.length.toString());
+  const content = te.encode(str);
+
+  const result = new Uint8Array(lengthBytes.byteLength + 1 + content.byteLength);
+  result.set(lengthBytes);
+  result.set(te.encode(':'), lengthBytes.byteLength);
+  result.set(content, lengthBytes.byteLength + 1);
 
   return result;
-}
+};
 
-function getType(
-  value:
-    | Buffer
-    | string
-    | any[]
-    | ArrayBuffer
-    | number
-    | boolean
-    | Record<string, unknown>
-    | object,
-): string {
-  if (Buffer.isBuffer(value)) {
-    return 'buffer';
+const encodeBuf = (buf: Uint8Array): Uint8Array => {
+  const lengthBytes = new TextEncoder().encode(buf.byteLength.toString());
+
+  const result = new Uint8Array(lengthBytes.byteLength + 1 + buf.byteLength);
+  result.set(lengthBytes);
+  result.set(te.encode(':'), lengthBytes.byteLength);
+  result.set(buf, lengthBytes.byteLength + 1);
+  return result;
+};
+
+const encodeNumber = (num: number): Uint8Array => {
+  // NOTE: only support integers
+  const int = Math.floor(num);
+  if (int !== num) {
+    throw new Error(`bencode only support integers, got ${num}`);
   }
 
-  if (Array.isArray(value)) {
-    return 'array';
+  return concatUint8Arrays([
+    stringToUint8Array('i'),
+    stringToUint8Array(int.toString()),
+    stringToUint8Array('e'),
+  ]);
+};
+
+const encodeDictionary = (obj: Record<string, bencodeValue>): Uint8Array => {
+  const results: Uint8Array[] = [];
+
+  Object.keys(obj)
+    .sort(cmpRawString)
+    .forEach(key => {
+      results.push(encodeString(key));
+      results.push(new Uint8Array(encode(obj[key]!)));
+    });
+
+  const d = stringToUint8Array('d');
+  const e = stringToUint8Array('e');
+  return concatUint8Arrays([d, ...results, e]);
+};
+
+const encodeArray = (arr: bencodeValue[]): Uint8Array => {
+  const prefixSuffix = te.encode('le'); // Combined prefix and suffix
+  const encodedElements = arr.map(encode); // Encode each element
+
+  // Concatenate the encoded elements directly into a Uint8Array
+  const result = concatUint8Arrays([prefixSuffix, ...encodedElements.flat()]);
+
+  return result;
+};
+
+export const encode = (data: bencodeValue | bencodeValue[]): Uint8Array => {
+  if (Array.isArray(data)) {
+    return encodeArray(data);
   }
 
-  if (ArrayBuffer.isView(value)) {
-    return 'arraybufferview';
-  }
-
-  if (value instanceof Number) {
-    return 'number';
-  }
-
-  if (value instanceof Boolean) {
-    return 'boolean';
-  }
-
-  if (isArrayBuffer(value)) {
-    return 'arraybuffer';
-  }
-
-  return typeof value;
-}
-
-function _encode(state: any, buffers: Buffer[], data: any): void {
-  if (data === null) {
-    return;
-  }
-
-  switch (getType(data)) {
-    case 'buffer':
-      buffer(buffers, data);
-      break;
-    case 'object':
-      dict(state, buffers, data);
-      break;
-    case 'array':
-      list(state, buffers, data);
-      break;
-    case 'string':
-      string(buffers, data);
-      break;
-    case 'number':
-      number(state, buffers, data);
-      break;
-    case 'boolean':
-      number(state, buffers, data);
-      break;
-    case 'arraybufferview':
-      buffer(buffers, Buffer.from(data.buffer, data.byteOffset, data.byteLength));
-      break;
-    case 'arraybuffer':
-      buffer(buffers, Buffer.from(data));
-      break;
-    default:
-      break;
-  }
-}
-
-const buffE = Buffer.from('e');
-const buffD = Buffer.from('d');
-const buffL = Buffer.from('l');
-
-function buffer(buffers: Buffer[], data: Buffer): void {
-  buffers.push(Buffer.from(`${data.length}:`), data);
-}
-
-function string(buffers: Buffer[], data: string): void {
-  buffers.push(Buffer.from(`${Buffer.byteLength(data)}:${data}`));
-}
-
-function number(state: any, buffers: Buffer[], data: number): void {
-  const maxLo = 0x80000000;
-  const hi = (data / maxLo) << 0;
-  const lo = (data % maxLo) << 0;
-  const val = hi * maxLo + lo;
-
-  buffers.push(Buffer.from(`i${val}e`));
-
-  if (val !== data && !state.disableFloatConversionWarning) {
-    state.disableFloatConversionWarning = true;
-    console.warn(
-      `WARNING: Possible data corruption detected with value "${data}":`,
-      `Bencoding only defines support for integers, value was converted to "${val}"`,
-    );
-    console.trace();
-  }
-}
-
-function dict(state: any, buffers: Buffer[], data: Record<string, unknown>): void {
-  buffers.push(buffD);
-
-  // sorted dicts
-  const keys = Object.keys(data).sort();
-  for (const k of keys) {
-    // filter out null / undefined elements
-    if (data[k] === null || data[k] === undefined) {
-      continue;
+  switch (typeof data) {
+    case 'string': {
+      return encodeString(data);
     }
 
-    string(buffers, k);
-    _encode(state, buffers, data[k]);
-  }
-
-  buffers.push(buffE);
-}
-
-function list(state: any, buffers: Buffer[], data: any[]): void {
-  let i = 0;
-  const c = data.length;
-  buffers.push(buffL);
-
-  for (; i < c; i++) {
-    if (data[i] === null) {
-      continue;
+    case 'number': {
+      return encodeNumber(data);
     }
 
-    _encode(state, buffers, data[i]);
-  }
+    case 'object': {
+      if (data instanceof Uint8Array) {
+        return encodeBuf(data);
+      }
 
-  buffers.push(buffE);
-}
+      return encodeDictionary(data);
+    }
+
+    default: {
+      throw new Error(`unsupport data type: ${typeof data}`);
+    }
+  }
+};
+
+export default encode;

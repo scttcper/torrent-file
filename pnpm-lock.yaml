@@ -8,6 +8,9 @@ dependencies:
   crypto-hash:
     specifier: ^3.0.0
     version: 3.0.0
+  uint8array-extras:
+    specifier: ^1.1.0
+    version: 1.1.0
 
 devDependencies:
   '@biomejs/biome':
@@ -2075,6 +2078,11 @@ packages:
     dependencies:
       base64-arraybuffer: 1.0.2
     dev: true
+
+  /uint8array-extras@1.1.0:
+    resolution: {integrity: sha512-CVaBSyOmGoFHu+zOVPbetXEXykOd8KHVBHLlqvmaMWpwcq3rewj18xVNbU5uzf48hclnNQhfNaNany2cMHFK/g==}
+    engines: {node: '>=18'}
+    dev: false
 
   /undici-types@5.26.5:
     resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
