@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 
-import { decode, encode } from '../../src/bencode/index.js';
+import { decode } from '../../src/bencode/index.js';
 
 it('should be able to decode an integer', () => {
   expect(decode('i123e')).toBe(123);
