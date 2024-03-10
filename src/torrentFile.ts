@@ -1,6 +1,7 @@
 import { join, sep } from 'node:path';
 
 import { sha1 } from 'crypto-hash';
+import { isUint8Array, uint8ArrayToHex, uint8ArrayToString } from 'uint8array-extras';
 
 import { decode, encode } from './bencode/index.js';
 
@@ -37,7 +38,7 @@ export interface TorrentFileData {
 /**
  * data about the files the torrent contains
  */
-export function files(file: Buffer): TorrentFileData {
+export function files(file: Uint8Array): TorrentFileData {
   const torrent: any = decode(file);
   const result: TorrentFileData = {
     files: [],
@@ -75,10 +76,10 @@ function sumLength(sum: number, file: string): number {
   return sum + file.length;
 }
 
-function splitPieces(buf: Buffer): string[] {
+function splitPieces(buf: Uint8Array): string[] {
   const pieces: string[] = [];
   for (let i = 0; i < buf.length; i += 20) {
-    pieces.push(buf.slice(i, i + 20).toString('hex'));
+    pieces.push(uint8ArrayToHex(buf.slice(i, i + 20)));
   }
 
   return pieces;
@@ -112,7 +113,7 @@ export interface TorrentInfo {
 /**
  * torrent file info
  */
-export function info(file: Buffer): TorrentInfo {
+export function info(file: Uint8Array): TorrentInfo {
   const torrent: any = decode(file);
   const result: TorrentInfo = {
     name: (torrent.info['name.utf-8'] || torrent.info.name).toString(),
@@ -132,8 +133,8 @@ export function info(file: Buffer): TorrentInfo {
     result.createdBy = torrent['created by'].toString();
   }
 
-  if (Buffer.isBuffer(torrent.comment)) {
-    result.comment = torrent.comment.toString();
+  if (isUint8Array(torrent.comment)) {
+    result.comment = uint8ArrayToString(torrent.comment);
   }
 
   // announce and announce-list will be missing if metadata fetched via ut_metadata
@@ -156,7 +157,7 @@ export function info(file: Buffer): TorrentInfo {
   }
 
   // web seeds
-  if (Buffer.isBuffer(torrent['url-list'])) {
+  if (isUint8Array(torrent['url-list'])) {
     // some clients set url-list to empty string
     torrent['url-list'] = torrent['url-list'].length > 0 ? [torrent['url-list']] : [];
   }

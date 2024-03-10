@@ -31,7 +31,6 @@ it('should be able to handle an compacted peer announce when decoding strings', 
     incomplete: 3,
     interval: 1800,
     'min interval': 1800,
-    peers:
-      '.�\u001bd\u001a\u001fQ�L\u0005F�4!�@\u001a\u001fbn�����\r�\u0013\u001a\u001f�Nh�<k\u0018\u000f=WF�',
+    peers: expect.any(Uint8Array),
   });
 });

@@ -1,7 +1,8 @@
+import { stringToUint8Array, uint8ArrayToString } from 'uint8array-extras';
+
 import type { bencodeValue } from './encode.js';
 import { isValidUTF8 } from './utils.js';
 
-const te = new TextEncoder();
 const td = new TextDecoder();
 
 class Decoder {
@@ -40,7 +41,7 @@ class Decoder {
 
   readNumber(): number {
     const buf = this.readUntil(':');
-    return parseInt(td.decode(buf), 10);
+    return parseInt(uint8ArrayToString(buf), 10);
   }
 
   peekByte(): string {
@@ -139,7 +140,7 @@ class Decoder {
 export const decode = (payload: ArrayBufferView | ArrayBuffer | string): bencodeValue => {
   let buf;
   if (typeof payload === 'string') {
-    buf = te.encode(payload);
+    buf = stringToUint8Array(payload);
   } else if (payload instanceof ArrayBuffer) {
     buf = new Uint8Array(payload);
   } else if ('buffer' in payload) {
