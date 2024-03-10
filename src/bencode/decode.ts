@@ -20,6 +20,7 @@ function getIntFromBuffer(buffer: Buffer, start: number, end: number): number {
     }
 
     if (num < 58 && num >= 48) {
+      // eslint-disable-next-line no-mixed-operators
       sum = sum * 10 + (num - 48);
       continue;
     }
