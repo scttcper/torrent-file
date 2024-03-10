@@ -117,7 +117,7 @@ function string(buffers: Buffer[], data: string): void {
 function number(state: any, buffers: Buffer[], data: number): void {
   const maxLo = 0x80000000;
   const hi = (data / maxLo) << 0;
-  const lo = data % maxLo << 0;
+  const lo = (data % maxLo) << 0;
   const val = hi * maxLo + lo;
 
   buffers.push(Buffer.from(`i${val}e`));

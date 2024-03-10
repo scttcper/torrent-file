@@ -2,6 +2,6 @@
   "extends": "@sindresorhus/tsconfig",
   "compilerOptions": {
     "outDir": "dist",
-    "target": "ES2022", // Node.js 18
+    "target": "ES2022" // Node.js 18
   }
 }

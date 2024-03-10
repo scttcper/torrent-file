@@ -14,8 +14,12 @@
   "sideEffects": false,
   "keywords": [],
   "scripts": {
-    "lint": "eslint --ext .ts .",
-    "lint:fix": "eslint --fix --ext .ts .",
+    "lint": "pnpm run '/^(lint:biome|lint:eslint)$/'",
+    "lint:biome": "biome check .",
+    "lint:eslint": "eslint --ext .ts,.tsx .",
+    "lint:fix": "pnpm run '/^(lint:biome|lint:eslint):fix$/'",
+    "lint:eslint:fix": "eslint --ext .ts,.tsx . --fix",
+    "lint:biome:fix": "biome check . --apply",
     "prepare": "npm run build",
     "build": "tsc",
     "test": "vitest run",
@@ -26,7 +30,8 @@
     "crypto-hash": "^2.0.1"
   },
   "devDependencies": {
-    "@ctrl/eslint-config": "4.0.6",
+    "@biomejs/biome": "1.6.0",
+    "@ctrl/eslint-config-biome": "2.1.1",
     "@sindresorhus/tsconfig": "4.0.0",
     "@types/node": "20.6.0",
     "@vitest/coverage-v8": "0.34.4",
