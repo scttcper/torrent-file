@@ -2,7 +2,7 @@
 
 > Parse a torrent file and read encoded data. 
 
-This project is based on [parse-torrent](https://www.npmjs.com/package/parse-torrent) and [node-bencode](https://github.com/themasch/node-bencode) to parse the data of a torrent file. This library implements its own [bencode](http://www.bittorrent.org/beps/bep_0003.html) encoder and decoder and keeps dependencies to a minimum.
+This project is based on [parse-torrent](https://www.npmjs.com/package/parse-torrent) and [node-bencode](https://github.com/themasch/node-bencode) to parse the data of a torrent file. This library implements its own [bencode](http://www.bittorrent.org/beps/bep_0003.html) encoder and decoder that does not use `Buffer`.
 
 ### Install
 ```console
@@ -43,23 +43,6 @@ import { hash } from '@ctrl/torrent-file';
 })()
 ```
 
-### encode
-Use the built in bencode encoder
-```ts
-import fs from 'fs';
-import { encode } from '@ctrl/torrent-file';
-
-encode({ name: 'my string to encode' });
-```
-
-### decode
-Easily get the raw data inside a torrent file.
-```ts
-import fs from 'fs';
-import { decode } from '@ctrl/torrent-file';
-
-decode(fs.readFileSync('myfile'));
-```
 
 ### See Also
 [parse-torrent](https://www.npmjs.com/package/parse-torrent) - "@ctrl/torrent-file" torrent parsing based very heavily off this project  
