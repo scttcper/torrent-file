@@ -1,9 +1,21 @@
+import { createHash } from 'node:crypto';
 import { join, sep } from 'node:path';
 
-import { sha1 } from 'crypto-hash';
 import { isUint8Array, uint8ArrayToHex, uint8ArrayToString } from 'uint8array-extras';
 
 import { decode, encode } from './bencode/index.js';
+
+/**
+ * Generates sha1 hash of the given arrayBuffer
+ * @param arrayBuffer ArrayBuffer to hash
+ * @returns sha1 hash of the given arrayBuffer in hex format
+ */
+function sha1(arrayBuffer: ArrayBuffer): Promise<string> {
+  const buffer = Buffer.from(arrayBuffer);
+  const hash = createHash("sha1");
+  hash.update(buffer);
+  return Promise.resolve(hash.digest("hex"));
+}
 
 /**
  * sha1 of torrent file info. This hash is commenly used by torrent clients as the ID of the torrent.
