@@ -1,5 +1,5 @@
-import { join, sep } from 'node:path';
 import { createHash } from 'node:crypto';
+import { join, sep } from 'node:path';
 
 import { isUint8Array, uint8ArrayToHex, uint8ArrayToString } from 'uint8array-extras';
 

@@ -1,3 +1,5 @@
+/* eslint-disable no-bitwise */
+
 // str1 > str2: 1
 // str1 === str2: 0
 // str1 < str2: -1

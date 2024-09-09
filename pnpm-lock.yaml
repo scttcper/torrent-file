@@ -16,8 +16,8 @@ importers:
         specifier: 1.8.3
         version: 1.8.3
       '@ctrl/eslint-config-biome':
-        specifier: 4.1.5
-        version: 4.1.5(eslint@9.10.0)(typescript@5.6.2)
+        specifier: 4.2.1
+        version: 4.2.1(eslint@9.10.0)(typescript@5.6.2)
       '@sindresorhus/tsconfig':
         specifier: 6.0.0
         version: 6.0.0
@@ -116,8 +116,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@ctrl/eslint-config-biome@4.1.5':
-    resolution: {integrity: sha512-9eLGX1ifFGybWKW30M42K4z5BaRVLPBIr5W5z/mkyyiMxq+gs7sVUUEKf8vhKcfxpvsKfG+8dKuyQPVxeQOsiQ==}
+  '@ctrl/eslint-config-biome@4.2.1':
+    resolution: {integrity: sha512-VPXluR6m8f4FatxH3PhpLAsP9BkFJnbAyv6Aga2+kdXWuDdhQQmbxc4SGnnc7rn5AebV63iw2w5u+J2ary9KnA==}
 
   '@esbuild/aix-ppc64@0.21.5':
     resolution: {integrity: sha512-1SDgH6ZSPTlggy1yI6+Dbkiz8xzpHJEVAlF/AM1tHPLsf5STom9rwtjE4hKAF20FfXXNTFqEYXyJNWh1GiZedQ==}
@@ -1319,7 +1319,7 @@ snapshots:
   '@biomejs/cli-win32-x64@1.8.3':
     optional: true
 
-  '@ctrl/eslint-config-biome@4.1.5(eslint@9.10.0)(typescript@5.6.2)':
+  '@ctrl/eslint-config-biome@4.2.1(eslint@9.10.0)(typescript@5.6.2)':
     dependencies:
       '@eslint/js': 9.10.0
       eslint-plugin-simple-import-sort: 12.1.1(eslint@9.10.0)
