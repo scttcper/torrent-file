@@ -1,3 +1,5 @@
+/* eslint-disable no-bitwise */
+
 // str1 > str2: 1
 // str1 === str2: 0
 // str1 < str2: -1
@@ -65,6 +67,7 @@ export const isValidUTF8 = (buf: Uint8Array): boolean => {
         i += 2;
 
         continue;
+        // biome-ignore lint/style/noUselessElse: false positive
       } else {
         return false;
       }

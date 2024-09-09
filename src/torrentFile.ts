@@ -1,14 +1,21 @@
+import { createHash } from 'node:crypto';
 import { join, sep } from 'node:path';
 
-import { sha1 } from 'crypto-hash';
 import { isUint8Array, uint8ArrayToHex, uint8ArrayToString } from 'uint8array-extras';
 
 import { decode, encode } from './bencode/index.js';
 
+export const sha1 = (input: Uint8Array): string => {
+  const hash = createHash('sha1');
+  // Update the hash object with the data
+  hash.update(input);
+  return hash.digest('hex');
+};
+
 /**
  * sha1 of torrent file info. This hash is commenly used by torrent clients as the ID of the torrent.
  */
-export async function hash(file: Uint8Array): Promise<string> {
+export function hash(file: Uint8Array): string {
   const torrent: any = decode(file);
   return sha1(encode(torrent.info));
 }
