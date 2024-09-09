@@ -11,7 +11,7 @@ const filepath = new URL('./ubuntu-18.04.2-live-server-amd64.iso.torrent', impor
 
 it('should have the same hash as parse-torrent', async () => {
   const file = await fs.readFile(filepath);
-  expect(await hash(file)).toBe((await parseTorrent(file)).infoHash);
+  expect(hash(file)).toBe((await parseTorrent(file)).infoHash);
 });
 it('should have the same name as parse-torrent', async () => {
   const file = await fs.readFile(filepath);

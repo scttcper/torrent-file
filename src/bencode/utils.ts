@@ -65,6 +65,7 @@ export const isValidUTF8 = (buf: Uint8Array): boolean => {
         i += 2;
 
         continue;
+        // biome-ignore lint/style/noUselessElse: false positive
       } else {
         return false;
       }
