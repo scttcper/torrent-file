@@ -6,13 +6,9 @@ import { isUint8Array, uint8ArrayToHex, uint8ArrayToString } from 'uint8array-ex
 import { decode, encode } from './bencode/index.js';
 
 export const sha1 = (input: Uint8Array): string => {
-  // Create a hash object
   const hash = createHash('sha1');
-
   // Update the hash object with the data
   hash.update(input);
-
-  // Generate the SHA-1 hash
   return hash.digest('hex');
 };
 
