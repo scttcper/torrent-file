@@ -77,6 +77,7 @@ export const encode = (data: bencodeValue | bencodeValue[]): Uint8Array => {
     return encodeArray(data);
   }
 
+  // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
   switch (typeof data) {
     case 'string': {
       return encodeString(data);
