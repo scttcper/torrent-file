@@ -4,7 +4,10 @@
   "description": "Parse a torrent file (name, hash, files, pieces)",
   "author": "Scott Cooper <scttcper@gmail.com>",
   "license": "MIT",
-  "repository": "scttcper/torrent-file",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/scttcper/torrent-file.git"
+  },
   "type": "module",
   "exports": "./dist/src/index.js",
   "types": "./dist/src/index.d.ts",
