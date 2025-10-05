@@ -5,6 +5,14 @@ import { isUint8Array, uint8ArrayToHex, uint8ArrayToString } from 'uint8array-ex
 
 import { decode, encode } from './bencode/index.js';
 
+// Helper function to convert Uint8Array to string for display
+const toString = (value: any): string => {
+  if (value instanceof Uint8Array) {
+    return new TextDecoder().decode(value);
+  }
+  return value.toString();
+};
+
 export const sha1 = (input: Uint8Array): string => {
   const hash = createHash('sha1');
   // Update the hash object with the data
@@ -13,7 +21,7 @@ export const sha1 = (input: Uint8Array): string => {
 };
 
 /**
- * sha1 of torrent file info. This hash is commenly used by torrent clients as the ID of the torrent.
+ * sha1 of torrent file info. This hash is commonly used by torrent clients as the ID of the torrent.
  */
 export function hash(file: Uint8Array): string {
   const torrent: any = decode(file);
@@ -56,10 +64,10 @@ export function files(file: Uint8Array): TorrentFileData {
   };
 
   const files: string[] = torrent.info.files || [torrent.info];
-  const name: string = (torrent.info['name.utf-8'] || torrent.info.name).toString();
+  const name: string = toString(torrent.info['name.utf-8'] || torrent.info.name);
   result.files = files.map((file: any, i) => {
     const parts: string[] = [name, ...(file['path.utf-8'] || file.path || [])].map(p =>
-      p.toString(),
+      toString(p),
     );
     return {
       path: join(sep, ...parts).slice(1),
@@ -123,7 +131,7 @@ export interface TorrentInfo {
 export function info(file: Uint8Array): TorrentInfo {
   const torrent: any = decode(file);
   const result: TorrentInfo = {
-    name: (torrent.info['name.utf-8'] || torrent.info.name).toString(),
+    name: toString(torrent.info['name.utf-8'] || torrent.info.name),
     announce: [],
     urlList: [],
   };
@@ -137,7 +145,7 @@ export function info(file: Uint8Array): TorrentInfo {
   }
 
   if (torrent['created by']) {
-    result.createdBy = torrent['created by'].toString();
+    result.createdBy = toString(torrent['created by']);
   }
 
   if (isUint8Array(torrent.comment)) {
