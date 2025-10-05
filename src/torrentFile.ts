@@ -160,11 +160,11 @@ export function info(file: Uint8Array): TorrentInfo {
   ) {
     torrent['announce-list'].forEach((urls: any) => {
       urls.forEach((url: any) => {
-        result.announce.push(url.toString());
+        result.announce.push(toString(url));
       });
     });
   } else if (torrent.announce) {
-    result.announce.push(torrent.announce.toString());
+    result.announce.push(toString(torrent.announce));
   }
 
   if (result.announce.length) {
@@ -177,7 +177,7 @@ export function info(file: Uint8Array): TorrentInfo {
     torrent['url-list'] = torrent['url-list'].length > 0 ? [torrent['url-list']] : [];
   }
 
-  result.urlList = (torrent['url-list'] || []).map((url: any) => url.toString());
+  result.urlList = (torrent['url-list'] || []).map((url: any) => toString(url));
   if (result.urlList.length) {
     result.urlList = Array.from(new Set(result.urlList));
   }
