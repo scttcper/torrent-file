@@ -7,8 +7,11 @@ const td = new TextDecoder();
 
 class Decoder {
   idx = 0;
+  buf: Uint8Array;
 
-  constructor(public buf: Uint8Array) {}
+  constructor(buf: Uint8Array) {
+    this.buf = buf;
+  }
 
   readByte(): string | null {
     if (this.idx >= this.buf.length) {
