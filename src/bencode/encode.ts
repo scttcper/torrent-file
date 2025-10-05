@@ -1,7 +1,5 @@
 import { concatUint8Arrays, stringToUint8Array } from 'uint8array-extras';
 
-import { cmpRawString } from './utils.js';
-
 export type bencodeValue =
   | string
   | Uint8Array

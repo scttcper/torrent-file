@@ -4,7 +4,7 @@ import type { bencodeValue } from './encode.js';
 
 const td = new TextDecoder();
 
-export class Decoder {
+class Decoder {
   idx = 0;
   buf: Uint8Array;
 
