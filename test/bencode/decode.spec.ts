@@ -21,21 +21,28 @@ it('should be able to decode an integer', () => {
 
 it('should be able to decode a dictionary', () => {
   expect(decode('d3:cow3:moo4:spam4:eggse')).toEqual({
-    cow: 'moo',
-    spam: 'eggs',
+    cow: new Uint8Array([109, 111, 111]), // 'moo'
+    spam: new Uint8Array([101, 103, 103, 115]), // 'eggs'
   });
-  expect(decode('d4:spaml1:a1:bee')).toEqual({ spam: ['a', 'b'] });
+  expect(decode('d4:spaml1:a1:bee')).toEqual({
+    spam: [new Uint8Array([97]), new Uint8Array([98])], // ['a', 'b']
+  });
   expect(
     decode('d9:publisher3:bob17:publisher-webpage15:www.example.com18:publisher.location4:homee'),
   ).toEqual({
-    publisher: 'bob',
-    'publisher-webpage': 'www.example.com',
-    'publisher.location': 'home',
+    publisher: new Uint8Array([98, 111, 98]), // 'bob'
+    'publisher-webpage': new Uint8Array([
+      119, 119, 119, 46, 101, 120, 97, 109, 112, 108, 101, 46, 99, 111, 109,
+    ]), // 'www.example.com'
+    'publisher.location': new Uint8Array([104, 111, 109, 101]), // 'home'
   });
 });
 
 it('should be able to decode a list', () => {
-  expect(decode('l4:spam4:eggse')).toEqual(['spam', 'eggs']);
+  expect(decode('l4:spam4:eggse')).toEqual([
+    new Uint8Array([115, 112, 97, 109]), // 'spam'
+    new Uint8Array([101, 103, 103, 115]), // 'eggs'
+  ]);
 });
 it('should return the correct type', () => {
   expect(decode('4:öö')).toBeTruthy();

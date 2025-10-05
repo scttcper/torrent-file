@@ -1,7 +1,5 @@
 import { concatUint8Arrays, stringToUint8Array } from 'uint8array-extras';
 
-import { cmpRawString } from './utils.js';
-
 export type bencodeValue =
   | string
   | Uint8Array
@@ -51,7 +49,7 @@ const encodeDictionary = (obj: Record<string, bencodeValue>): Uint8Array => {
   const results: Uint8Array[] = [];
 
   Object.keys(obj)
-    .sort(cmpRawString)
+    .sort()
     .forEach(key => {
       results.push(encodeString(key));
       results.push(new Uint8Array(encode(obj[key]!)));

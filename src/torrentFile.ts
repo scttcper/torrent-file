@@ -5,6 +5,14 @@ import { isUint8Array, uint8ArrayToHex, uint8ArrayToString } from 'uint8array-ex
 
 import { decode, encode } from './bencode/index.js';
 
+// Helper function to convert Uint8Array to string for display
+const toString = (value: any): string => {
+  if (value instanceof Uint8Array) {
+    return uint8ArrayToString(value);
+  }
+  return value.toString();
+};
+
 export const sha1 = (input: Uint8Array): string => {
   const hash = createHash('sha1');
   // Update the hash object with the data
@@ -13,7 +21,7 @@ export const sha1 = (input: Uint8Array): string => {
 };
 
 /**
- * sha1 of torrent file info. This hash is commenly used by torrent clients as the ID of the torrent.
+ * sha1 of torrent file info. This hash is commonly used by torrent clients as the ID of the torrent.
  */
 export function hash(file: Uint8Array): string {
   const torrent: any = decode(file);
@@ -56,10 +64,10 @@ export function files(file: Uint8Array): TorrentFileData {
   };
 
   const files: string[] = torrent.info.files || [torrent.info];
-  const name: string = (torrent.info['name.utf-8'] || torrent.info.name).toString();
+  const name: string = toString(torrent.info['name.utf-8'] || torrent.info.name);
   result.files = files.map((file: any, i) => {
     const parts: string[] = [name, ...(file['path.utf-8'] || file.path || [])].map(p =>
-      p.toString(),
+      toString(p),
     );
     return {
       path: join(sep, ...parts).slice(1),
@@ -123,7 +131,7 @@ export interface TorrentInfo {
 export function info(file: Uint8Array): TorrentInfo {
   const torrent: any = decode(file);
   const result: TorrentInfo = {
-    name: (torrent.info['name.utf-8'] || torrent.info.name).toString(),
+    name: toString(torrent.info['name.utf-8'] || torrent.info.name),
     announce: [],
     urlList: [],
   };
@@ -137,11 +145,11 @@ export function info(file: Uint8Array): TorrentInfo {
   }
 
   if (torrent['created by']) {
-    result.createdBy = torrent['created by'].toString();
+    result.createdBy = toString(torrent['created by']);
   }
 
-  if (isUint8Array(torrent.comment)) {
-    result.comment = uint8ArrayToString(torrent.comment);
+  if (torrent.comment) {
+    result.comment = toString(torrent.comment);
   }
 
   // announce and announce-list will be missing if metadata fetched via ut_metadata
@@ -152,11 +160,11 @@ export function info(file: Uint8Array): TorrentInfo {
   ) {
     torrent['announce-list'].forEach((urls: any) => {
       urls.forEach((url: any) => {
-        result.announce.push(url.toString());
+        result.announce.push(toString(url));
       });
     });
   } else if (torrent.announce) {
-    result.announce.push(torrent.announce.toString());
+    result.announce.push(toString(torrent.announce));
   }
 
   if (result.announce.length) {
@@ -169,7 +177,7 @@ export function info(file: Uint8Array): TorrentInfo {
     torrent['url-list'] = torrent['url-list'].length > 0 ? [torrent['url-list']] : [];
   }
 
-  result.urlList = (torrent['url-list'] || []).map((url: any) => url.toString());
+  result.urlList = (torrent['url-list'] || []).map((url: any) => toString(url));
   if (result.urlList.length) {
     result.urlList = Array.from(new Set(result.urlList));
   }

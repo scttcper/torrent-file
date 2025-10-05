@@ -8,6 +8,8 @@ import { expect, it } from 'vitest';
 import { files, hash, info } from '../src/index.js';
 
 const filepath = new URL('./ubuntu-18.04.2-live-server-amd64.iso.torrent', import.meta.url);
+const duplicateTrackerFilepath = new URL('./leaves-duplicate-tracker.torrent', import.meta.url);
+const emptyAnnounceListFilepath = new URL('./leaves-empty-announce-list.torrent', import.meta.url);
 
 it('should have the same hash as parse-torrent', async () => {
   const file = await fs.readFile(filepath);
@@ -29,4 +31,26 @@ it('should parse files', async () => {
 it('should parse file pieces', async () => {
   const file = await fs.readFile(filepath);
   expect(files(file).pieces).toHaveLength(1668);
+});
+
+it('should dedupe announce list', async () => {
+  const file = await fs.readFile(duplicateTrackerFilepath);
+  const torrentInfo = info(file);
+
+  expect(torrentInfo.announce).toEqual(['http://tracker.example.com/announce']);
+});
+
+it('should handle empty announce list', async () => {
+  const file = await fs.readFile(emptyAnnounceListFilepath);
+  const torrentInfo = info(file);
+
+  expect(torrentInfo.announce).toEqual(['udp://tracker.publicbt.com:80/announce']);
+});
+
+it('should handle creation date', async () => {
+  const file = await fs.readFile(filepath);
+  const torrentInfo = info(file);
+
+  expect(torrentInfo.created).toBeInstanceOf(Date);
+  expect(torrentInfo.created?.toISOString()).toBe('2019-02-14T22:53:17.000Z');
 });

@@ -1,7 +1,6 @@
 import { stringToUint8Array, uint8ArrayToString } from 'uint8array-extras';
 
 import type { bencodeValue } from './encode.js';
-import { isValidUTF8 } from './utils.js';
 
 const td = new TextDecoder();
 
@@ -88,11 +87,10 @@ class Decoder {
     }
   }
 
-  nextBufOrString(): string | Uint8Array {
+  nextBufOrString(): Uint8Array {
     const length = this.readNumber();
     this.assertByte(':');
-    const buf = this.readBytes(length);
-    return isValidUTF8(buf) ? td.decode(buf) : buf;
+    return this.readBytes(length);
   }
 
   nextString(): string {
