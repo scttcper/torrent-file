@@ -1,6 +1,6 @@
 {
   "name": "@ctrl/torrent-file",
-  "version": "0.0.0-placeholder",
+  "version": "4.3.0",
   "description": "Parse a torrent file (name, hash, files, pieces)",
   "author": "Scott Cooper <scttcper@gmail.com>",
   "license": "MIT",
@@ -46,7 +46,9 @@
     "arrowParens": "avoid",
     "semi": true,
     "printWidth": 100,
-    "plugins": ["@trivago/prettier-plugin-sort-imports"],
+    "plugins": [
+      "@trivago/prettier-plugin-sort-imports"
+    ],
     "importOrder": [
       "^node:.*$",
       "<THIRD_PARTY_MODULES>",
