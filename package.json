@@ -1,6 +1,6 @@
 {
   "name": "@ctrl/torrent-file",
-  "version": "4.3.0",
+  "version": "4.4.0",
   "description": "Parse a torrent file (name, hash, files, pieces)",
   "author": "Scott Cooper <scttcper@gmail.com>",
   "license": "MIT",
