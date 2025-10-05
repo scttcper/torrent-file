@@ -8,7 +8,7 @@ import { decode, encode } from './bencode/index.js';
 // Helper function to convert Uint8Array to string for display
 const toString = (value: any): string => {
   if (value instanceof Uint8Array) {
-    return new TextDecoder().decode(value);
+    return uint8ArrayToString(value);
   }
   return value.toString();
 };
@@ -148,8 +148,8 @@ export function info(file: Uint8Array): TorrentInfo {
     result.createdBy = toString(torrent['created by']);
   }
 
-  if (isUint8Array(torrent.comment)) {
-    result.comment = uint8ArrayToString(torrent.comment);
+  if (torrent.comment) {
+    result.comment = toString(torrent.comment);
   }
 
   // announce and announce-list will be missing if metadata fetched via ut_metadata

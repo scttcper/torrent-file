@@ -46,3 +46,11 @@ it('should handle empty announce list', async () => {
 
   expect(torrentInfo.announce).toEqual(['udp://tracker.publicbt.com:80/announce']);
 });
+
+it('should handle creation date', async () => {
+  const file = await fs.readFile(filepath);
+  const torrentInfo = info(file);
+
+  expect(torrentInfo.created).toBeInstanceOf(Date);
+  expect(torrentInfo.created?.toISOString()).toBe('2019-02-14T22:53:17.000Z');
+});
