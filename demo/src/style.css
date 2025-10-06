@@ -1,14 +1,26 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* Global background and text colors */
-:root { color-scheme: light dark; }
-body { background: #ffffff; color: #000000; }
+:root {
+  color-scheme: light dark;
+}
+body {
+  background: #ffffff;
+  color: #000000;
+}
 @media (prefers-color-scheme: dark) {
-  body { background: #000000; color: #ffffff; }
+  body {
+    background: #000000;
+    color: #ffffff;
+  }
 }
 
 /* Misc */
-input[type="file"] { display: none; }
-.controls { display: flex; gap: .5rem; justify-content: center; }
-
-
+input[type='file'] {
+  display: none;
+}
+.controls {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
