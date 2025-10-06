@@ -8,6 +8,7 @@
     "type": "git",
     "url": "git+https://github.com/scttcper/torrent-file.git"
   },
+  "homepage": "https://torrent-file.pages.dev",
   "type": "module",
   "exports": "./dist/src/index.js",
   "types": "./dist/src/index.d.ts",
