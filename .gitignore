@@ -36,3 +36,4 @@ jspm_packages
 build
 docs
 dist
+demo/dist

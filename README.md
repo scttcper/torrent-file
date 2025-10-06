@@ -57,3 +57,18 @@ import { hash } from '@ctrl/torrent-file';
 
 [parse-torrent](https://www.npmjs.com/package/parse-torrent) - "@ctrl/torrent-file" torrent parsing based very heavily off this project  
 [node-bencode](https://github.com/themasch/node-bencode) - bencoder built into this project heavily based off this project
+
+### Demo
+
+Run a local demo UI to drop a `.torrent` file and view parsed output:
+
+```bash
+pnpm install
+pnpm demo:watch
+```
+
+To build the demo for static hosting:
+
+```bash
+pnpm demo:build
+```
