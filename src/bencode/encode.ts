@@ -10,8 +10,8 @@ export type bencodeValue =
 const te = new TextEncoder();
 
 const encodeString = (str: string): Uint8Array => {
-  const lengthBytes = new TextEncoder().encode(str.length.toString());
   const content = te.encode(str);
+  const lengthBytes = te.encode(content.byteLength.toString());
 
   const result = new Uint8Array(lengthBytes.byteLength + 1 + content.byteLength);
   result.set(lengthBytes);
@@ -61,13 +61,10 @@ const encodeDictionary = (obj: Record<string, bencodeValue>): Uint8Array => {
 };
 
 const encodeArray = (arr: bencodeValue[]): Uint8Array => {
-  const prefixSuffix = te.encode('le'); // Combined prefix and suffix
-  const encodedElements = arr.map(encode); // Encode each element
-
-  // Concatenate the encoded elements directly into a Uint8Array
-  const result = concatUint8Arrays([prefixSuffix, ...encodedElements.flat()]);
-
-  return result;
+  const prefix = te.encode('l');
+  const suffix = te.encode('e');
+  const encodedElements = arr.map(encode);
+  return concatUint8Arrays([prefix, ...encodedElements.flat(), suffix]);
 };
 
 export const encode = (data: bencodeValue | bencodeValue[]): Uint8Array => {

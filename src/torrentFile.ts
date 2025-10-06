@@ -87,7 +87,7 @@ export function files(file: Uint8Array): TorrentFileData {
   return result;
 }
 
-function sumLength(sum: number, file: string): number {
+function sumLength(sum: number, file: { length: number }): number {
   return sum + file.length;
 }
 
@@ -183,4 +183,64 @@ export function info(file: Uint8Array): TorrentInfo {
   }
 
   return result;
+}
+
+export interface TorrentFileEncodeInput {
+  info: any;
+  announce?: string[];
+  urlList?: string[];
+  private?: boolean;
+  created?: Date;
+  createdBy?: string;
+  comment?: string;
+}
+
+/**
+ * Convert a parsed torrent object back into a .torrent file buffer.
+ */
+export function toTorrentFile(parsed: TorrentFileEncodeInput): Uint8Array {
+  const torrent: {
+    info: any;
+    'announce-list'?: string[][];
+    announce?: string;
+    'url-list'?: string[] | string;
+    'creation date'?: number;
+    'created by'?: string;
+    comment?: string;
+  } = {
+    info: parsed.info,
+  };
+
+  // announce list (BEP-12)
+  const announce = parsed.announce || [];
+  if (announce.length > 0) {
+    torrent['announce-list'] = announce.map(url => {
+      if (!torrent.announce) torrent.announce = url;
+      return [url];
+    });
+  }
+
+  // url-list (BEP-19 / web seeds)
+  if (parsed.urlList && parsed.urlList.length > 0) {
+    torrent['url-list'] = parsed.urlList.slice();
+  }
+
+  // Private flag lives inside info dict
+  if (parsed.private !== undefined) {
+    torrent.info = { ...torrent.info, private: Number(parsed.private) };
+  }
+
+  if (parsed.created) {
+    torrent['creation date'] = Math.floor(parsed.created.getTime() / 1000);
+  }
+
+  if (parsed.createdBy) {
+    torrent['created by'] = parsed.createdBy;
+  }
+
+  if (parsed.comment) {
+    torrent.comment = parsed.comment;
+  }
+
+  return encode(torrent);
 }
