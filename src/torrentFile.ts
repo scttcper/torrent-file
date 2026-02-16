@@ -1,15 +1,30 @@
 import { createHash } from 'node:crypto';
-import { join, sep } from 'node:path';
-
-import { isUint8Array, uint8ArrayToHex, uint8ArrayToString } from 'uint8array-extras';
+import { sep } from 'node:path';
 
 import { decode, encode } from './bencode/index.js';
 
-// Helper function to convert Uint8Array to string for display
+const td = new TextDecoder();
+
+const hexLookup: string[] = new Array(256); // eslint-disable-line unicorn/no-new-array
+for (let i = 0; i < 256; i++) {
+  hexLookup[i] = (i < 16 ? '0' : '') + i.toString(16);
+}
+
+function toHex(buf: Uint8Array): string {
+  let hex = '';
+  // eslint-disable-next-line typescript-eslint/prefer-for-of
+  for (let i = 0; i < buf.length; i++) {
+    hex += hexLookup[buf[i]!]!;
+  }
+
+  return hex;
+}
+
 const toString = (value: any): string => {
   if (value instanceof Uint8Array) {
-    return uint8ArrayToString(value);
+    return td.decode(value);
   }
+
   return value.toString();
 };
 
@@ -69,9 +84,12 @@ function flattenFileTree(
 }
 
 function splitPieces(buf: Uint8Array, chunkSize: number): string[] {
-  const pieces: string[] = [];
-  for (let i = 0; i < buf.length; i += chunkSize) {
-    pieces.push(uint8ArrayToHex(buf.slice(i, i + chunkSize)));
+  const hex = toHex(buf);
+  const hexChunkSize = chunkSize * 2;
+  const count = Math.ceil(hex.length / hexChunkSize);
+  const pieces: string[] = new Array(count); // eslint-disable-line unicorn/no-new-array
+  for (let i = 0; i < count; i++) {
+    pieces[i] = hex.slice(i * hexChunkSize, (i + 1) * hexChunkSize);
   }
 
   return pieces;
@@ -83,8 +101,7 @@ function splitPieces(buf: Uint8Array, chunkSize: number): string[] {
 function latin1KeyToHex(key: string): string {
   let hex = '';
   for (let i = 0; i < key.length; i++) {
-    const byte = key.charCodeAt(i) & 0xff; // eslint-disable-line no-bitwise
-    hex += byte.toString(16).padStart(2, '0');
+    hex += hexLookup[key.charCodeAt(i) & 0xff]!; // eslint-disable-line no-bitwise
   }
 
   return hex;
@@ -182,28 +199,32 @@ export function files(file: Uint8Array): TorrentFileData {
   if (hasV2 && !hasV1) {
     // v2-only: file tree is the only source of file info
     const flatFiles = flattenFileTree(torrent.info['file tree'], []);
-    result.files = flatFiles.map((f, i) => {
+    let offset = 0;
+    result.files = flatFiles.map(f => {
       const parts = [name, ...f.path];
-      return {
-        path: join(sep, ...parts).slice(1),
+      const entry = {
+        path: parts.join(sep),
         name: parts[parts.length - 1]!,
         length: f.length,
-        offset: flatFiles.slice(0, i).reduce((sum, ff) => sum + ff.length, 0),
-        piecesRoot: f['pieces root'] ? uint8ArrayToHex(f['pieces root']) : undefined,
+        offset,
+        piecesRoot: f['pieces root'] ? toHex(f['pieces root']) : undefined,
       };
+      offset += f.length;
+      return entry;
     });
   } else {
     // v1 or hybrid: use traditional file list
     const fileList: any[] = torrent.info.files || [torrent.info];
-    result.files = fileList.map((f: any, i) => {
+    let offset = 0;
+    result.files = fileList.map((f: any) => {
       const parts: string[] = [name, ...(f['path.utf-8'] || f.path || [])].map(p => toString(p));
       const entry: TorrentFileData['files'][number] = {
-        path: join(sep, ...parts).slice(1),
+        path: parts.join(sep),
         name: parts[parts.length - 1]!,
         length: f.length,
-        offset: fileList.slice(0, i).reduce(sumLength, 0),
+        offset,
       };
-
+      offset += f.length;
       return entry;
     });
 
@@ -226,7 +247,7 @@ export function files(file: Uint8Array): TorrentFileData {
           : file.path;
         const root = v2ByPath.get(relativePath);
         if (root) {
-          file.piecesRoot = uint8ArrayToHex(root);
+          file.piecesRoot = toHex(root);
         }
       }
     }
@@ -336,7 +357,7 @@ export function info(file: Uint8Array): TorrentInfo {
   }
 
   // web seeds
-  if (isUint8Array(torrent['url-list'])) {
+  if (torrent['url-list'] instanceof Uint8Array) {
     // some clients set url-list to empty string
     torrent['url-list'] = torrent['url-list'].length > 0 ? [torrent['url-list']] : [];
   }

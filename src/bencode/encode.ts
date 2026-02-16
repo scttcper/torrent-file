@@ -1,5 +1,3 @@
-import { concatUint8Arrays, stringToUint8Array } from 'uint8array-extras';
-
 export type bencodeValue =
   | string
   | Uint8Array
@@ -8,78 +6,92 @@ export type bencodeValue =
   | bencodeValue[];
 
 const te = new TextEncoder();
+const COLON = 0x3a;
+const BYTE_d = new Uint8Array([0x64]);
+const BYTE_e = new Uint8Array([0x65]);
+const BYTE_l = new Uint8Array([0x6c]);
+
+function concat(arrays: Uint8Array[]): Uint8Array {
+  let totalLength = 0;
+  for (const arr of arrays) {
+    totalLength += arr.byteLength;
+  }
+
+  const result = new Uint8Array(totalLength);
+  let offset = 0;
+  for (const arr of arrays) {
+    result.set(arr, offset);
+    offset += arr.byteLength;
+  }
+
+  return result;
+}
 
 const encodeString = (str: string): Uint8Array => {
   const content = te.encode(str);
-  const lengthBytes = te.encode(content.byteLength.toString());
-
-  const result = new Uint8Array(lengthBytes.byteLength + 1 + content.byteLength);
-  result.set(lengthBytes);
-  result.set(te.encode(':'), lengthBytes.byteLength);
-  result.set(content, lengthBytes.byteLength + 1);
-
+  const lengthStr = content.byteLength.toString();
+  const result = new Uint8Array(lengthStr.length + 1 + content.byteLength);
+  te.encodeInto(lengthStr, result);
+  result[lengthStr.length] = COLON;
+  result.set(content, lengthStr.length + 1);
   return result;
 };
 
 const encodeBuf = (buf: Uint8Array): Uint8Array => {
-  const lengthBytes = te.encode(buf.byteLength.toString());
-
-  const result = new Uint8Array(lengthBytes.byteLength + 1 + buf.byteLength);
-  result.set(lengthBytes);
-  result.set(te.encode(':'), lengthBytes.byteLength);
-  result.set(buf, lengthBytes.byteLength + 1);
+  const lengthStr = buf.byteLength.toString();
+  const result = new Uint8Array(lengthStr.length + 1 + buf.byteLength);
+  te.encodeInto(lengthStr, result);
+  result[lengthStr.length] = COLON;
+  result.set(buf, lengthStr.length + 1);
   return result;
 };
 
 const encodeNumber = (num: number): Uint8Array => {
-  // NOTE: only support integers
   const int = Math.floor(num);
   if (int !== num) {
     throw new Error(`bencode only support integers, got ${num}`);
   }
 
-  return concatUint8Arrays([
-    stringToUint8Array('i'),
-    stringToUint8Array(int.toString()),
-    stringToUint8Array('e'),
-  ]);
+  return te.encode(`i${int}e`);
 };
 
 // Inverse of Decoder.nextKeyLatin1 — see decode.ts for rationale.
 const encodeKeyLatin1 = (key: string): Uint8Array => {
-  const bytes = new Uint8Array(key.length);
+  const lengthStr = key.length.toString();
+  const result = new Uint8Array(lengthStr.length + 1 + key.length);
+  te.encodeInto(lengthStr, result);
+  result[lengthStr.length] = COLON;
+  const offset = lengthStr.length + 1;
   for (let i = 0; i < key.length; i++) {
-    bytes[i] = key.charCodeAt(i) & 0xff; // eslint-disable-line no-bitwise
+    result[offset + i] = key.charCodeAt(i) & 0xff; // eslint-disable-line no-bitwise
   }
 
-  const lengthBytes = te.encode(bytes.byteLength.toString());
-  const result = new Uint8Array(lengthBytes.byteLength + 1 + bytes.byteLength);
-  result.set(lengthBytes);
-  result.set(te.encode(':'), lengthBytes.byteLength);
-  result.set(bytes, lengthBytes.byteLength + 1);
   return result;
 };
 
 const encodeDictionary = (obj: Record<string, bencodeValue>): Uint8Array => {
-  const results: Uint8Array[] = [];
+  const keys = Object.keys(obj).sort();
+  const parts: Uint8Array[] = new Array(keys.length * 2 + 2); // eslint-disable-line unicorn/no-new-array
+  parts[0] = BYTE_d;
+  let i = 1;
+  for (const key of keys) {
+    parts[i++] = encodeKeyLatin1(key);
+    parts[i++] = encode(obj[key]!);
+  }
 
-  Object.keys(obj)
-    .sort()
-    .forEach(key => {
-      results.push(encodeKeyLatin1(key));
-      results.push(new Uint8Array(encode(obj[key]!)));
-    });
-
-  const d = stringToUint8Array('d');
-  const e = stringToUint8Array('e');
-  return concatUint8Arrays([d, ...results, e]);
+  parts[i] = BYTE_e;
+  return concat(parts);
 };
 
 const encodeArray = (arr: bencodeValue[]): Uint8Array => {
-  const prefix = te.encode('l');
-  const suffix = te.encode('e');
-  const encodedElements = arr.map(encode);
-  return concatUint8Arrays([prefix, ...encodedElements.flat(), suffix]);
+  const parts: Uint8Array[] = new Array(arr.length + 2); // eslint-disable-line unicorn/no-new-array
+  parts[0] = BYTE_l;
+  for (let i = 0; i < arr.length; i++) {
+    parts[i + 1] = encode(arr[i]!);
+  }
+
+  parts[arr.length + 1] = BYTE_e;
+  return concat(parts);
 };
 
 export const encode = (data: bencodeValue | bencodeValue[]): Uint8Array => {

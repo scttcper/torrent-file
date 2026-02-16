@@ -28,6 +28,7 @@
     "build": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
+    "bench": "vitest bench ./bench/index.bench.ts",
     "demo:watch": "pnpm -C demo dev",
     "demo:build": "pnpm -C demo build"
   },
