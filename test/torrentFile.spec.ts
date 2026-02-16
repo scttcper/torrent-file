@@ -22,7 +22,7 @@ it('should have the same name as parse-torrent', async () => {
 it('should parse files', async () => {
   const file = await fs.readFile(filepath);
   expect(files(file).files[0]).toEqual({
-    length: 874512384,
+    length: 874_512_384,
     name: 'ubuntu-18.04.2-live-server-amd64.iso',
     offset: 0,
     path: 'ubuntu-18.04.2-live-server-amd64.iso',

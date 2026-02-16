@@ -43,7 +43,7 @@ class Decoder {
 
   readNumber(): number {
     const buf = this.readUntil(':');
-    return parseInt(uint8ArrayToString(buf), 10);
+    return Number.parseInt(uint8ArrayToString(buf), 10);
   }
 
   peekByte(): string {
@@ -105,8 +105,8 @@ class Decoder {
     this.assertByte('e');
     const result = Number(content);
 
-    if (isNaN(result)) {
-      throw new Error(`not a number: ${content}`);
+    if (Number.isNaN(result)) {
+      throw new TypeError(`not a number: ${content}`);
     }
 
     return result;

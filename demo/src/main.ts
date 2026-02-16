@@ -15,7 +15,9 @@ async function readFileAsUint8Array(file: File): Promise<Uint8Array> {
 
 function setText(id: string, text: string) {
   const el = document.getElementById(id);
-  if (!el) return;
+  if (!el) {
+    return;
+  }
   if (el.tagName === 'TEXTAREA') {
     (el as HTMLTextAreaElement).value = text;
   } else if (el.tagName === 'PRE' || el.tagName === 'CODE') {
@@ -39,11 +41,15 @@ function setupDragAndDrop() {
   const dropzone = document.getElementById('dropzone');
   const input = document.getElementById('fileInput') as HTMLInputElement | null;
   const chooseButtonDrop = document.getElementById('chooseButtonDrop') as HTMLButtonElement | null;
-  if (!dropzone) return;
+  if (!dropzone) {
+    return;
+  }
 
   const onFiles = (list: FileList | null) => {
     const file = list && list[0];
-    if (file) void handleTorrentFile(file);
+    if (file) {
+      void handleTorrentFile(file);
+    }
   };
 
   dropzone.addEventListener('dragover', e => {

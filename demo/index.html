@@ -7,19 +7,19 @@
     <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
-    <div class="bg-white dark:bg-black dark:text-white mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div class="max-w-2xl mx-auto">
-        <div class="text-base max-w-prose">
-          <h1 class="leading-10 text-5xl text-black dark:text-white font-semibold">torrent file</h1>
+    <div class="mx-auto bg-white px-4 py-12 sm:px-6 lg:px-8 dark:bg-black dark:text-white">
+      <div class="mx-auto max-w-2xl">
+        <div class="max-w-prose text-base">
+          <h1 class="text-5xl leading-10 font-semibold text-black dark:text-white">torrent file</h1>
           <p class="mt-2 text-xl text-black dark:text-white">
             Parse a torrent file and read encoded data.
           </p>
         </div>
-        <div class="mt-4 mb-6 flex text-base max-w-prose">
+        <div class="mt-4 mb-6 flex max-w-prose text-base">
           <div class="rounded-md shadow">
             <a
               href="https://github.com/scttcper/torrent-file#readme"
-              class="button w-full flex items-center justify-center px-3 py-1 border border-black dark:border-white text-base font-medium rounded-md text-white dark:text-black bg-black dark:bg-white hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-colors duration-200 tracking-wide"
+              class="button flex w-full items-center justify-center rounded-md border border-black bg-black px-3 py-1 text-base font-medium tracking-wide text-white transition-colors duration-200 hover:bg-white hover:text-black focus:ring-2 focus:ring-black focus:outline-none dark:border-white dark:bg-white dark:text-black dark:hover:bg-black dark:hover:text-white dark:focus:ring-white"
               target="_blank"
               rel="noreferrer noopener"
             >
@@ -27,23 +27,23 @@
             </a>
           </div>
         </div>
-        <div class="max-w-prose mb-6">
-          <h3 class="text-xl font-semibold leading-5 mb-4 text-black dark:text-white">Install</h3>
+        <div class="mb-6 max-w-prose">
+          <h3 class="mb-4 text-xl leading-5 font-semibold text-black dark:text-white">Install</h3>
           <pre
-            class="rounded bg-white dark:bg-gradient-to-b dark:from-black dark:to-[#111111] text-black dark:text-white py-3 px-4 text-sm border border-black/10 dark:border-white/10 shadow-sm"
+            class="rounded border border-black/10 bg-white px-4 py-3 text-sm text-black shadow-sm dark:border-white/10 dark:bg-gradient-to-b dark:from-black dark:to-[#111111] dark:text-white"
           ><code>npm install @ctrl/torrent-file</code></pre>
         </div>
 
-        <div class="max-w-prose mb-6">
-          <h3 class="text-xl font-semibold leading-5 mb-4 text-black dark:text-white">Demo</h3>
+        <div class="mb-6 max-w-prose">
+          <h3 class="mb-4 text-xl leading-5 font-semibold text-black dark:text-white">Demo</h3>
           <section class="grid grid-cols-1 gap-3">
             <div
               id="dropzone"
-              class="border-2 border-dashed rounded-xl p-8 text-center border-black/60 dark:border-white/60 transition-colors hover:border-black dark:hover:border-white hover:ring-1 hover:ring-black dark:hover:ring-white"
+              class="rounded-xl border-2 border-dashed border-black/60 p-8 text-center transition-colors hover:border-black hover:ring-1 hover:ring-black dark:border-white/60 dark:hover:border-white dark:hover:ring-white"
             >
               <p class="text-black dark:text-white">
                 Drag and drop a
-                <code class="px-1 py-0.5 border border-black dark:border-white rounded"
+                <code class="rounded border border-black px-1 py-0.5 dark:border-white"
                   >.torrent</code
                 >
                 file
@@ -52,7 +52,7 @@
                 <button
                   id="chooseButtonDrop"
                   type="button"
-                  class="button px-3 py-1 border border-black dark:border-white text-base font-medium rounded-md text-white dark:text-black bg-black dark:bg-white hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-colors duration-200 tracking-wide"
+                  class="button rounded-md border border-black bg-black px-3 py-1 text-base font-medium tracking-wide text-white transition-colors duration-200 hover:bg-white hover:text-black focus:ring-2 focus:ring-black focus:outline-none dark:border-white dark:bg-white dark:text-black dark:hover:bg-black dark:hover:text-white dark:focus:ring-white"
                 >
                   Choose file
                 </button>
@@ -61,7 +61,7 @@
             <button
               id="chooseButton"
               type="button"
-              class="button px-3 py-1 border border-black dark:border-white text-base font-medium rounded-md text-white dark:text-black bg-black dark:bg-white hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-colors duration-200 tracking-wide hidden"
+              class="button hidden rounded-md border border-black bg-black px-3 py-1 text-base font-medium tracking-wide text-white transition-colors duration-200 hover:bg-white hover:text-black focus:ring-2 focus:ring-black focus:outline-none dark:border-white dark:bg-white dark:text-black dark:hover:bg-black dark:hover:text-white dark:focus:ring-white"
             >
               Choose file
             </button>
@@ -76,7 +76,7 @@
               id="raw"
               style="width: 100%; height: 400px"
               autocomplete="off"
-              class="block w-full bg-white dark:bg-black text-black dark:text-white placeholder:text-black/50 dark:placeholder:text-white/50 caret-black dark:caret-white ring-1 ring-black dark:ring-white focus:ring-2 border border-black dark:border-white/40 rounded-lg mb-3 font-mono px-3 py-2"
+              class="mb-3 block w-full rounded-lg border border-black bg-white px-3 py-2 font-mono text-black caret-black ring-1 ring-black placeholder:text-black/50 focus:ring-2 dark:border-white/40 dark:bg-black dark:text-white dark:caret-white dark:ring-white dark:placeholder:text-white/50"
               readonly
             ></textarea>
           </section>

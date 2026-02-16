@@ -167,8 +167,8 @@ export function info(file: Uint8Array): TorrentInfo {
     result.announce.push(toString(torrent.announce));
   }
 
-  if (result.announce.length) {
-    result.announce = Array.from(new Set(result.announce));
+  if (result.announce.length > 0) {
+    result.announce = [...new Set(result.announce)];
   }
 
   // web seeds
@@ -178,8 +178,8 @@ export function info(file: Uint8Array): TorrentInfo {
   }
 
   result.urlList = (torrent['url-list'] || []).map((url: any) => toString(url));
-  if (result.urlList.length) {
-    result.urlList = Array.from(new Set(result.urlList));
+  if (result.urlList.length > 0) {
+    result.urlList = [...new Set(result.urlList)];
   }
 
   return result;
@@ -215,14 +215,16 @@ export function toTorrentFile(parsed: TorrentFileEncodeInput): Uint8Array {
   const announce = parsed.announce || [];
   if (announce.length > 0) {
     torrent['announce-list'] = announce.map(url => {
-      if (!torrent.announce) torrent.announce = url;
+      if (!torrent.announce) {
+        torrent.announce = url;
+      }
       return [url];
     });
   }
 
   // url-list (BEP-19 / web seeds)
   if (parsed.urlList && parsed.urlList.length > 0) {
-    torrent['url-list'] = parsed.urlList.slice();
+    torrent['url-list'] = [...parsed.urlList];
   }
 
   // Private flag lives inside info dict

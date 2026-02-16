@@ -12,14 +12,14 @@ it('should always return a Uint8Array', () => {
 });
 
 it('should sort dictionaries', () => {
-  const data = { string: 'Hello World', integer: 12345 };
+  const data = { string: 'Hello World', integer: 12_345 };
   expect(uint8ArrayToString(encode(data))).toBe('d7:integeri12345e6:string11:Hello Worlde');
 });
 
 it('should force keys to be strings', () => {
   const data = {
     12: 'Hello World',
-    34: 12345,
+    34: 12_345,
   };
   expect(uint8ArrayToString(encode(data))).toBe('d2:1211:Hello World2:34i12345ee');
 });
@@ -65,10 +65,10 @@ it('should be able to safely encode numbers between -/+ 2 ^ 53 (as ints)', () =>
   );
 });
 it('should be able to encode a previously problematice 64 bit int', () => {
-  expect(uint8ArrayToString(encode(2433088826))).toBe(`i${2433088826}e`);
+  expect(uint8ArrayToString(encode(2_433_088_826))).toBe(`i${2_433_088_826}e`);
 });
 it('should be able to encode a negative 64 bit int', () => {
-  expect(uint8ArrayToString(encode(-0xffffffff))).toBe(`i-${0xffffffff}e`);
+  expect(uint8ArrayToString(encode(-0xff_ff_ff_ff))).toBe(`i-${0xff_ff_ff_ff}e`);
 });
 // it('should be able to encode a positive 64 bit float (as int)', () => {
 //   expect(encode(0xffffffff + 0.5, undefined, undefined, true).toString()).toBe(`i${0xffffffff}e`);
