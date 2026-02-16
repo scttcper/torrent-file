@@ -1,4 +1,4 @@
-import { files, hash, info } from '../../src/torrentFile.js';
+import { files, hashes, info } from '../../src/torrentFile.js';
 
 function formatJson(value: unknown): string {
   try {
@@ -33,8 +33,8 @@ async function handleTorrentFile(file: File) {
   // Calculate outputs
   const i = info(data);
   const f = files(data);
-  const h = hash(data);
-  setText('raw', formatJson({ info: i, files: f, hash: h }));
+  const h = hashes(data);
+  setText('raw', formatJson({ info: i, files: f, hashes: h }));
 }
 
 function setupDragAndDrop() {

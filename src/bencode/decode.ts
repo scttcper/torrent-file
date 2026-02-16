@@ -93,12 +93,6 @@ class Decoder {
     return this.readBytes(length);
   }
 
-  nextString(): string {
-    const length = this.readNumber();
-    this.assertByte(':');
-    return td.decode(this.readBytes(length));
-  }
-
   nextNumber(): number {
     this.assertByte('i');
     const content = td.decode(this.readUntil('e'));
@@ -124,12 +118,28 @@ class Decoder {
     return result;
   }
 
+  // Latin1 (1 byte → 1 code point) is lossless for arbitrary binary keys.
+  // BEP-52 piece layers uses raw SHA-256 hashes as dict keys, which
+  // would be corrupted by UTF-8 decoding.
+  nextKeyLatin1(): string {
+    const length = this.readNumber();
+    this.assertByte(':');
+    const bytes = this.readBytes(length);
+    let key = '';
+    // eslint-disable-next-line typescript-eslint/prefer-for-of
+    for (let i = 0; i < bytes.length; i++) {
+      key += String.fromCharCode(bytes[i]!);
+    }
+
+    return key;
+  }
+
   nextDictionary(): Record<string, bencodeValue> {
     this.assertByte('d');
     const result: Record<string, bencodeValue> = {};
 
     while (this.peekByte() !== 'e') {
-      result[this.nextString()] = this.next();
+      result[this.nextKeyLatin1()] = this.next();
     }
 
     this.assertByte('e');

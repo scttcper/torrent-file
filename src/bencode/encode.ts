@@ -22,7 +22,7 @@ const encodeString = (str: string): Uint8Array => {
 };
 
 const encodeBuf = (buf: Uint8Array): Uint8Array => {
-  const lengthBytes = new TextEncoder().encode(buf.byteLength.toString());
+  const lengthBytes = te.encode(buf.byteLength.toString());
 
   const result = new Uint8Array(lengthBytes.byteLength + 1 + buf.byteLength);
   result.set(lengthBytes);
@@ -45,13 +45,28 @@ const encodeNumber = (num: number): Uint8Array => {
   ]);
 };
 
+// Inverse of Decoder.nextKeyLatin1 — see decode.ts for rationale.
+const encodeKeyLatin1 = (key: string): Uint8Array => {
+  const bytes = new Uint8Array(key.length);
+  for (let i = 0; i < key.length; i++) {
+    bytes[i] = key.charCodeAt(i) & 0xff; // eslint-disable-line no-bitwise
+  }
+
+  const lengthBytes = te.encode(bytes.byteLength.toString());
+  const result = new Uint8Array(lengthBytes.byteLength + 1 + bytes.byteLength);
+  result.set(lengthBytes);
+  result.set(te.encode(':'), lengthBytes.byteLength);
+  result.set(bytes, lengthBytes.byteLength + 1);
+  return result;
+};
+
 const encodeDictionary = (obj: Record<string, bencodeValue>): Uint8Array => {
   const results: Uint8Array[] = [];
 
   Object.keys(obj)
     .sort()
     .forEach(key => {
-      results.push(encodeString(key));
+      results.push(encodeKeyLatin1(key));
       results.push(new Uint8Array(encode(obj[key]!)));
     });
 
@@ -94,5 +109,3 @@ export const encode = (data: bencodeValue | bencodeValue[]): Uint8Array => {
     }
   }
 };
-
-export default encode;

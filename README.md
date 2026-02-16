@@ -2,7 +2,9 @@
 
 > Parse a torrent file and read encoded data.
 
-This project is based on [parse-torrent](https://www.npmjs.com/package/parse-torrent) and [node-bencode](https://github.com/themasch/node-bencode) to parse the data of a torrent file. This library implements its own [bencode](http://www.bittorrent.org/beps/bep_0003.html) encoder and decoder that does not use `Buffer`.
+Supports BitTorrent v1 ([BEP-3](http://www.bittorrent.org/beps/bep_0003.html)), v2 ([BEP-52](http://www.bittorrent.org/beps/bep_0052.html)), and hybrid torrent files.
+
+This project is based on [parse-torrent](https://www.npmjs.com/package/parse-torrent) and [node-bencode](https://github.com/themasch/node-bencode) to parse the data of a torrent file. This library implements its own [bencode](http://www.bittorrent.org/beps/bep_0003.html) encoder and decoder that does not use `Buffer` making it easier to use in browser or non node environments.
 
 demo: https://torrent-file.pages.dev
 
@@ -16,7 +18,7 @@ npm install @ctrl/torrent-file
 
 ##### info
 
-The content of the metainfo file.
+The content of the metainfo file. Includes a `version` field (`'v1'`, `'v2'`, or `'hybrid'`).
 
 ```ts
 import fs from 'fs';
@@ -29,7 +31,7 @@ console.log({ torrentInfo });
 
 ##### files
 
-data about the files described in the torrent file, includes hashes of the pieces
+Data about the files described in the torrent file, includes hashes of the pieces. For v2/hybrid torrents, files include `piecesRoot` and the result includes `pieceLayers`. `pieces` is undefined for v2-only torrents.
 
 ```ts
 import fs from 'fs';
@@ -42,25 +44,31 @@ console.log({ torrentFiles });
 
 ##### hash
 
-sha1 of torrent file info. This hash is commonly used by torrent clients as the ID of the torrent.
-
-Note: This function is synchronous and uses Node.js `crypto` under the hood.
+SHA-1 of torrent file info. This hash is commonly used by torrent clients as the ID of the torrent.
 
 ```ts
 import fs from 'fs';
 
 import { hash } from '@ctrl/torrent-file';
 
-(async () => {
-  const torrentHash = await hash(fs.readFileSync('myfile'));
-  console.log({ torrentHash });
-})();
+const torrentHash = hash(fs.readFileSync('myfile'));
+console.log({ torrentHash });
 ```
 
-### See Also
+##### hashes
 
-[parse-torrent](https://www.npmjs.com/package/parse-torrent) - "@ctrl/torrent-file" torrent parsing based very heavily off this project  
-[node-bencode](https://github.com/themasch/node-bencode) - bencoder built into this project heavily based off this project
+Returns both v1 (SHA-1) and v2 (SHA-256) info hashes along with the detected torrent version. `infoHashV2` is only present for v2 and hybrid torrents.
+
+```ts
+import fs from 'fs';
+
+import { hashes } from '@ctrl/torrent-file';
+
+const h = hashes(fs.readFileSync('myfile'));
+console.log(h.version); // 'v1', 'v2', or 'hybrid'
+console.log(h.infoHash); // SHA-1 (always present)
+console.log(h.infoHashV2); // SHA-256 (v2/hybrid only)
+```
 
 ### Encode
 
@@ -106,3 +114,8 @@ To build the demo for static hosting:
 ```bash
 pnpm demo:build
 ```
+
+### See Also
+
+[parse-torrent](https://www.npmjs.com/package/parse-torrent) - torrent parsing based very heavily off this package  
+[node-bencode](https://github.com/themasch/node-bencode) - bencoder built into this project heavily based off this package
