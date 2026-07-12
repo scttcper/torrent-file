@@ -1,14 +1,14 @@
-import { isUint8Array, stringToUint8Array, uint8ArrayToString } from 'uint8array-extras';
+import { stringToUint8Array, uint8ArrayToString } from 'uint8array-extras';
 import { expect, it } from 'vitest';
 
 import { decode, encode } from '../../src/bencode/index.js';
 
 it('should always return a Uint8Array', () => {
-  expect(isUint8Array(encode({}))).toBeTruthy();
-  expect(isUint8Array(encode('test'))).toBeTruthy();
-  expect(isUint8Array(encode([3, 2]))).toBeTruthy();
-  expect(isUint8Array(encode({ a: 'b', 3: 6 }))).toBeTruthy();
-  expect(isUint8Array(encode(123))).toBeTruthy();
+  expect(encode({}).constructor).toBe(Uint8Array);
+  expect(encode('test').constructor).toBe(Uint8Array);
+  expect(encode([3, 2]).constructor).toBe(Uint8Array);
+  expect(encode({ a: 'b', 3: 6 }).constructor).toBe(Uint8Array);
+  expect(encode(123).constructor).toBe(Uint8Array);
 });
 
 it('should sort dictionaries', () => {
@@ -30,12 +30,12 @@ it('should be able to encode a positive integer', () => {
 it('should be able to encode a negative integer', () => {
   expect(uint8ArrayToString(encode(-123))).toBe('i-123e');
 });
-// it('should be able to encode a positive float (as int)', () => {
-//   expect(encode(123.5, undefined, undefined, true).toString()).toBe('i123e');
-// });
-// it('should be able to encode a negative float (as int)', () => {
-//   expect(encode(-123.5, undefined, undefined, true).toString()).toBe('i-123e');
-// });
+it('should reject numbers that bencode cannot represent safely', () => {
+  expect(() => encode(1.5)).toThrow(/safe integers/);
+  expect(() => encode(Number.NaN)).toThrow(/safe integers/);
+  expect(() => encode(Number.POSITIVE_INFINITY)).toThrow(/safe integers/);
+  expect(() => encode(Number.MAX_SAFE_INTEGER + 1)).toThrow(/safe integers/);
+});
 
 it('should be able to safely encode numbers between -/+ 2 ^ 53 (as ints)', () => {
   const JAVASCRIPT_INT_BITS = 53;
@@ -64,18 +64,12 @@ it('should be able to safely encode numbers between -/+ 2 ^ 53 (as ints)', () =>
     `i-${Number.MAX_SAFE_INTEGER}e`,
   );
 });
-it('should be able to encode a previously problematice 64 bit int', () => {
+it('should be able to encode a previously problematic 64 bit int', () => {
   expect(uint8ArrayToString(encode(2_433_088_826))).toBe(`i${2_433_088_826}e`);
 });
 it('should be able to encode a negative 64 bit int', () => {
   expect(uint8ArrayToString(encode(-0xff_ff_ff_ff))).toBe(`i-${0xff_ff_ff_ff}e`);
 });
-// it('should be able to encode a positive 64 bit float (as int)', () => {
-//   expect(encode(0xffffffff + 0.5, undefined, undefined, true).toString()).toBe(`i${0xffffffff}e`);
-// });
-// it('should be able to encode a negative 64 bit float (as int)', () => {
-//   expect(encode(-0xffffffff - 0.5, undefined, undefined, true).toString()).toBe(`i-${0xffffffff}e`);
-// });
 it('should be able to encode a string', () => {
   expect(uint8ArrayToString(encode('asdf'))).toBe('4:asdf');
   expect(uint8ArrayToString(encode(':asdf:'))).toBe('6::asdf:');
@@ -84,47 +78,24 @@ it('should be able to encode a uint8array', () => {
   expect(uint8ArrayToString(encode(stringToUint8Array('asdf')))).toBe('4:asdf');
   expect(uint8ArrayToString(encode(stringToUint8Array(':asdf:')))).toBe('6::asdf:');
 });
-// it('should be able to encode an array', () => {
-//   expect(uint8ArrayToString(encode([32, 12]))).toBe('li32ei12ee');
-//   expect(uint8ArrayToString(encode([':asdf:']))).toBe('l6::asdf:e');
-// });
 it('should be able to encode an object', () => {
   expect(uint8ArrayToString(encode({ a: 'bc' }))).toBe('d1:a2:bce');
   expect(uint8ArrayToString(encode({ a: '45', b: 45 })).toString()).toBe('d1:a2:451:bi45ee');
   expect(uint8ArrayToString(encode({ a: stringToUint8Array('bc') })).toString()).toBe('d1:a2:bce');
 });
 
-// it('should encode new Number(1) as number', () => {
-//   const data = Number(1);
-//   const result = decode(encode(data, undefined, undefined, true));
-//   expect(result).toEqual(1);
-// });
+it('should encode textual dictionary keys as UTF-8', () => {
+  expect(uint8ArrayToString(encode({ café: 1 }))).toBe('d5:caféi1ee');
+});
 
-// it('should encode new Boolean(true) as number', () => {
-//   const data = true;
-//   const result = decode(encode(data, undefined, undefined, true));
-//   expect(result).toEqual(1);
-// });
+it('should preserve raw dictionary keys when re-encoding decoded data', () => {
+  const encoded = encode({ café: 1 });
+  expect(encode(decode(encoded))).toEqual(encoded);
+});
 
 it('should encode Uint8Array as Uint8Array', () => {
   const data = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9]);
   const result = decode(encode(data));
-  expect(result).toEqual(result);
+  expect(result).toEqual(data);
+  expect(result?.constructor).toBe(Uint8Array);
 });
-
-// it('should encode Uint32Array as buffer', () => {
-//   const data = new Uint32Array([
-//     0xf, 0xff, 0xfff, 0xffff, 0xfffff, 0xffffff, 0xfffffff, 0xffffffff,
-//   ]);
-//   const result = decode(encode(data));
-//   const expected = Buffer.from(data.buffer);
-//   expect(result).toEqual(expected);
-// });
-
-// it('should encode Uint8Array subarray properly', () => {
-//   const data = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9]);
-//   const subData = data.subarray(5);
-//   const result = decode(encode(subData));
-//   const expected = Buffer.from(subData.buffer, subData.byteOffset, subData.byteLength);
-//   expect(result).toEqual(expected);
-// });

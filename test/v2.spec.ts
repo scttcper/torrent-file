@@ -26,8 +26,13 @@ describe('v2-only torrent', () => {
     const file = await fs.readFile(v2Path);
     const h = hashes(file);
     expect(h.version).toBe('v2');
-    expect(h.infoHash).toBe('a8d30cc3abf2c04747f23ac29cb09c5824f9e75f');
+    expect(h.infoHash).toBeUndefined();
     expect(h.infoHashV2).toBe('f52498c4ad914be2c8a1d1e96b84a0032a8c28a691c9120d004dcc41a828b2bb');
+  });
+
+  it('should not expose a v1 hash for v2-only metadata', async () => {
+    const file = await fs.readFile(v2Path);
+    expect(() => hash(file)).toThrow(/does not contain BitTorrent v1 metadata/);
   });
 
   it('should parse file tree', async () => {
@@ -134,6 +139,7 @@ describe('hybrid torrent with padding files', () => {
           { length: 500, path: ['.pad', '500'] }, // padding file
           { length: 2000, path: ['b.txt'] },
         ],
+        'meta version': 2,
         name: 'myTorrent',
         'piece length': 32_768,
         pieces: sha1Pieces,
@@ -153,6 +159,118 @@ describe('hybrid torrent with padding files', () => {
   });
 });
 
+describe('BEP-52 file information', () => {
+  it('uses meta version, raw file-tree order, UTF-8 names, and aligned offsets', () => {
+    const root = new Uint8Array(32);
+    const torrent = encode({
+      info: {
+        'file tree': {
+          2: { '': { length: 1, 'pieces root': root } },
+          10: { '': { length: 1, 'pieces root': root } },
+          'café.txt': { '': { length: 1, 'pieces root': root } },
+        },
+        'meta version': 2,
+        name: 'root',
+        'piece length': 16_384,
+      },
+    });
+
+    expect(files(torrent).files).toEqual([
+      {
+        length: 1,
+        name: '10',
+        offset: 0,
+        path: 'root/10',
+        piecesRoot: '00'.repeat(32),
+      },
+      {
+        length: 1,
+        name: '2',
+        offset: 16_384,
+        path: 'root/2',
+        piecesRoot: '00'.repeat(32),
+      },
+      {
+        length: 1,
+        name: 'café.txt',
+        offset: 32_768,
+        path: 'root/café.txt',
+        piecesRoot: '00'.repeat(32),
+      },
+    ]);
+  });
+
+  it('does not treat a file tree without meta version 2 as v2 metadata', () => {
+    const torrent = encode({
+      info: {
+        'file tree': {},
+        length: 0,
+        name: 'v1',
+        'piece length': 16_384,
+        pieces: new Uint8Array(),
+      },
+    });
+
+    expect(info(torrent).version).toBe('v1');
+  });
+
+  it('rejects unsupported future meta versions before parsing files', () => {
+    const torrent = encode({
+      info: {
+        'file tree': {},
+        'meta version': 3,
+        name: 'future',
+        'piece length': 16_384,
+      },
+    });
+
+    expect(() => files(torrent)).toThrow(/Unsupported BitTorrent meta version: 3/);
+  });
+
+  it('rejects invalid v2 piece lengths and file entries', () => {
+    const invalidPieceLength = encode({
+      info: {
+        'file tree': {},
+        'meta version': 2,
+        name: 'invalid',
+        'piece length': 20_000,
+      },
+    });
+    expect(() => info(invalidPieceLength)).toThrow(/power of two/);
+
+    const missingPiecesRoot = encode({
+      info: {
+        'file tree': { 'file.txt': { '': { length: 1 } } },
+        'meta version': 2,
+        name: 'invalid',
+        'piece length': 16_384,
+      },
+    });
+    expect(() => files(missingPiecesRoot)).toThrow(/32-byte pieces root/);
+  });
+
+  it('parses file names that overlap Object prototype properties', () => {
+    const torrent = encode({
+      info: {
+        'file tree': {
+          ['__proto__']: { '': { length: 0 } },
+          constructor: { '': { length: 0 } },
+          toString: { '': { length: 0 } },
+        },
+        'meta version': 2,
+        name: 'root',
+        'piece length': 16_384,
+      },
+    });
+
+    expect(files(torrent).files.map(file => file.name)).toEqual([
+      '__proto__',
+      'constructor',
+      'toString',
+    ]);
+  });
+});
+
 describe('v1 backward compatibility', () => {
   it('should detect version as v1', async () => {
     const file = await fs.readFile(v1Path);
@@ -165,6 +283,11 @@ describe('v1 backward compatibility', () => {
     const h = hashes(file);
     expect(h.version).toBe('v1');
     expect(h.infoHashV2).toBeUndefined();
+  });
+
+  it('should reject hashV2 for v1-only metadata', async () => {
+    const file = await fs.readFile(v1Path);
+    expect(() => hashV2(file)).toThrow(/does not contain BitTorrent v2 metadata/);
   });
 
   it('should still return v1 hash from hash()', async () => {
@@ -186,14 +309,17 @@ describe('v1 backward compatibility', () => {
 
 describe('bencode latin1 round-trip', () => {
   it('should round-trip binary dictionary keys', () => {
-    // Create a dict with binary key (all 256 byte values)
-    const binaryKey = String.fromCharCode(...Array.from({ length: 32 }, (_, i) => i * 8));
-    const obj: Record<string, any> = { [binaryKey]: 42 };
-    const encoded = encode(obj);
+    const keyBytes = Uint8Array.from({ length: 32 }, (_, i) => i * 8);
+    const binaryKey = String.fromCharCode(...keyBytes);
+    const encoded = new Uint8Array(4 + keyBytes.length + 5);
+    encoded.set(new TextEncoder().encode('d32:'));
+    encoded.set(keyBytes, 4);
+    encoded.set(new TextEncoder().encode('i42ee'), 4 + keyBytes.length);
     const decoded = decode(encoded) as Record<string, any>;
     expect(Object.keys(decoded)).toHaveLength(1);
     expect(Object.keys(decoded)[0]).toBe(binaryKey);
     expect(decoded[binaryKey]).toBe(42);
+    expect(encode(decoded)).toEqual(encoded);
   });
 
   it('should round-trip v2 torrent with piece layers', async () => {
@@ -211,7 +337,7 @@ describe('bencode latin1 round-trip', () => {
 });
 
 describe('toTorrentFile with piece layers', () => {
-  it('should encode piece layers in output', async () => {
+  it('should encode piece layers in output', () => {
     const piecesRoot = new Uint8Array(32);
     piecesRoot.fill(0xab);
     const pieceData = new Uint8Array(64);
@@ -235,5 +361,20 @@ describe('toTorrentFile with piece layers', () => {
     expect(keys).toHaveLength(1);
     expect(decoded['piece layers'][keys[0]!]).toBeInstanceOf(Uint8Array);
     expect(decoded['piece layers'][keys[0]!].length).toBe(64);
+  });
+
+  it('should encode UTF-8 file-tree names', () => {
+    const buf = toTorrentFile({
+      info: {
+        'file tree': {
+          'café.txt': { '': { length: 0 } },
+        },
+        'meta version': 2,
+        name: 'root',
+        'piece length': 16_384,
+      },
+    });
+
+    expect(files(buf).files[0]!.name).toBe('café.txt');
   });
 });

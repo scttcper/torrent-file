@@ -1,24 +1,24 @@
 # torrent-file [![npm](https://badgen.net/npm/v/@ctrl/torrent-file)](https://www.npmjs.com/package/@ctrl/torrent-file)
 
-> Parse a torrent file and read encoded data.
+> Parse, inspect, and encode BitTorrent metainfo files.
 
-Supports BitTorrent v1 ([BEP-3](http://www.bittorrent.org/beps/bep_0003.html)), v2 ([BEP-52](http://www.bittorrent.org/beps/bep_0052.html)), and hybrid torrent files.
+Supports BitTorrent v1 ([BEP 3](https://www.bittorrent.org/beps/bep_0003.html)), v2 ([BEP 52](https://www.bittorrent.org/beps/bep_0052.html)), and hybrid torrent files containing both formats.
 
-This project is based on [parse-torrent](https://www.npmjs.com/package/parse-torrent) and [node-bencode](https://github.com/themasch/node-bencode) to parse the data of a torrent file. This library implements its own [bencode](http://www.bittorrent.org/beps/bep_0003.html) encoder and decoder that does not use `Buffer` making it easier to use in browser or non node environments.
+This project is based on [parse-torrent](https://www.npmjs.com/package/parse-torrent) and [node-bencode](https://github.com/themasch/node-bencode). It includes a strict [bencode](https://www.bittorrent.org/beps/bep_0003.html#bencoding) encoder and decoder built around `Uint8Array` rather than Node.js `Buffer`.
 
-demo: https://torrent-file.pages.dev
+Demo: https://torrent-file.pages.dev
 
-### Install
+## Install
 
 ```console
 npm install @ctrl/torrent-file
 ```
 
-### API
+## API
 
-##### info
+### `info(file)`
 
-The content of the metainfo file. Includes a `version` field (`'v1'`, `'v2'`, or `'hybrid'`).
+Returns display metadata, trackers, web seeds, and the detected `version`: `'v1'`, `'v2'`, or `'hybrid'`.
 
 ```ts
 import fs from 'fs';
@@ -29,9 +29,17 @@ const torrentInfo = info(fs.readFileSync('myfile'));
 console.log({ torrentInfo });
 ```
 
-##### files
+### `files(file)`
 
-Data about the files described in the torrent file, includes hashes of the pieces. For v2/hybrid torrents, files include `piecesRoot` and the result includes `pieceLayers`. `pieces` is undefined for v2-only torrents.
+Returns file and piece information:
+
+- `length` is the sum of the listed file lengths.
+- `offset` is the file's byte offset in the protocol piece space. BEP 52 aligns every non-empty v2 file to a piece boundary, so v2 offsets can contain gaps that are not included in `length`.
+- `pieces` contains hexadecimal SHA-1 hashes for v1/hybrid torrents and is absent for v2-only torrents.
+- `piecesRoot` is a hexadecimal SHA-256 Merkle root on v2/hybrid files.
+- `pieceLayers` maps hexadecimal pieces roots to arrays of hexadecimal SHA-256 hashes.
+
+Paths use the host platform's path separator. For v2 torrents, the advisory torrent `name` is prepended to the paths returned from the BEP 52 file tree.
 
 ```ts
 import fs from 'fs';
@@ -42,9 +50,9 @@ const torrentFiles = files(fs.readFileSync('myfile'));
 console.log({ torrentFiles });
 ```
 
-##### hash
+### `hash(file)`
 
-SHA-1 of torrent file info. This hash is commonly used by torrent clients as the ID of the torrent.
+Returns the v1 SHA-1 info hash. It throws for a v2-only torrent because that torrent does not have a v1 identity.
 
 ```ts
 import fs from 'fs';
@@ -55,9 +63,22 @@ const torrentHash = hash(fs.readFileSync('myfile'));
 console.log({ torrentHash });
 ```
 
-##### hashes
+### `hashV2(file)`
 
-Returns both v1 (SHA-1) and v2 (SHA-256) info hashes along with the detected torrent version. `infoHashV2` is only present for v2 and hybrid torrents.
+Returns the full 32-byte v2 SHA-256 info hash as hexadecimal. It throws for a v1-only torrent.
+
+```ts
+import fs from 'fs';
+
+import { hashV2 } from '@ctrl/torrent-file';
+
+const torrentHashV2 = hashV2(fs.readFileSync('myfile'));
+console.log({ torrentHashV2 });
+```
+
+### `hashes(file)`
+
+Returns the available v1 (SHA-1) and v2 (SHA-256) info hashes along with the detected torrent version. `infoHash` is present for v1 and hybrid torrents; `infoHashV2` is present for v2 and hybrid torrents.
 
 ```ts
 import fs from 'fs';
@@ -66,11 +87,21 @@ import { hashes } from '@ctrl/torrent-file';
 
 const h = hashes(fs.readFileSync('myfile'));
 console.log(h.version); // 'v1', 'v2', or 'hybrid'
-console.log(h.infoHash); // SHA-1 (always present)
+console.log(h.infoHash); // SHA-1 (v1/hybrid only)
 console.log(h.infoHashV2); // SHA-256 (v2/hybrid only)
 ```
 
-### Encode
+Info hashes are computed from the exact bencoded `info` dictionary bytes found in the file, as required by [BEP 3](https://www.bittorrent.org/beps/bep_0003.html#trackers) and [BEP 52](https://www.bittorrent.org/beps/bep_0052.html#infohash). They are not computed from a decode/encode round trip.
+
+### Low-level bencode
+
+`decode()` returns bencoded byte strings as `Uint8Array`, including byte strings used as dictionary values. Decoded dictionaries have a null prototype, so keys such as `__proto__`, `constructor`, and `toString` are ordinary own properties rather than inherited JavaScript behavior. `encode()` accepts strings, `Uint8Array`, safe integers, arrays, and dictionaries.
+
+The decoder rejects noncanonical or incomplete bencode, including unordered/duplicate dictionary keys, leading-zero integers, negative zero, unsafe integers, truncated values, and trailing data. The higher-level parsing and hashing functions use the same strict decoder and therefore throw on malformed input.
+
+Dictionary keys can be arbitrary bytes. Decoded dictionaries retain enough internal information for `encode(decode(data))` to preserve binary keys such as BEP 52 pieces roots. Newly constructed textual dictionary keys are UTF-8 encoded.
+
+## Encode
 
 Convert a parsed torrent object back into a `.torrent` file buffer.
 
@@ -100,7 +131,30 @@ const buf = toTorrentFile({
 fs.writeFileSync('example.torrent', buf);
 ```
 
-### Demo
+`toTorrentFile()` serializes supplied metadata; it does not read file contents, calculate piece hashes, build v2 Merkle trees, or insert hybrid padding files.
+
+For v2 `pieceLayers`, dictionary keys are raw 32-byte pieces roots rather than hexadecimal text. When constructing them manually, represent each byte with one JavaScript character:
+
+```ts
+const rawDictionaryKey = (bytes: Uint8Array) => String.fromCharCode(...bytes);
+
+const buf = toTorrentFile({
+  info: v2Info,
+  pieceLayers: {
+    [rawDictionaryKey(piecesRoot)]: concatenatedLayerHashes,
+  },
+});
+```
+
+The `pieceLayers` returned by `files()` is a display-friendly hexadecimal representation and is not the raw input shape accepted by `toTorrentFile()`.
+
+## Validation scope
+
+The parser validates canonical bencoding and the v1/v2 file-information structure it consumes, including v2 metadata version, piece size, file-tree shape, file lengths, pieces roots, and hash byte lengths.
+
+It does not recompute file hashes, cryptographically verify piece layers against Merkle roots, or prove that the v1 and v2 sides of a hybrid torrent describe identical content. Applications downloading or trusting content must perform those integrity checks separately.
+
+## Demo
 
 Run a local demo UI to drop a `.torrent` file and view parsed output:
 
@@ -115,7 +169,12 @@ To build the demo for static hosting:
 pnpm demo:build
 ```
 
-### See Also
+## Specifications and related projects
 
-[parse-torrent](https://www.npmjs.com/package/parse-torrent) - torrent parsing based very heavily off this package  
-[node-bencode](https://github.com/themasch/node-bencode) - bencoder built into this project heavily based off this package
+- [BEP 3 — BitTorrent protocol v1 and bencoding](https://www.bittorrent.org/beps/bep_0003.html)
+- [BEP 12 — multitracker metadata](https://www.bittorrent.org/beps/bep_0012.html)
+- [BEP 19 — web seeds](https://www.bittorrent.org/beps/bep_0019.html)
+- [BEP 47 — padding files and extended file attributes](https://www.bittorrent.org/beps/bep_0047.html)
+- [BEP 52 — BitTorrent protocol v2 and hybrid torrents](https://www.bittorrent.org/beps/bep_0052.html)
+- [parse-torrent](https://www.npmjs.com/package/parse-torrent)
+- [node-bencode](https://github.com/themasch/node-bencode)

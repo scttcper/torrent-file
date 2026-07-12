@@ -1,23 +1,26 @@
 import { expect, it } from 'vitest';
 
-import { decode } from '../../src/bencode/index.js';
+import { decode, encode } from '../../src/bencode/index.js';
 
 it('should be able to decode an integer', () => {
   expect(decode('i123e')).toBe(123);
   expect(decode('i-123e')).toBe(-123);
 });
-// it('should be throw an error when trying to decode a broken integer', () => {
-//   expect(() => decode('i12+3e')).toThrow(/not a number/);
-//   expect(() => decode('i-1+23e')).toThrow(/not a number/);
-// });
-// it('should be able to decode a float (as int)', () => {
-//   expect(decode('i12.3e')).toBe(12);
-//   expect(decode('i-12.3e')).toBe(-12);
-// });
-// it('should be throw an error when trying to decode a broken float', () => {
-//   expect(() => decode('i1+2.3e')).toThrow(/not a number/);
-//   expect(() => decode('i-1+2.3e')).toThrow(/not a number/);
-// });
+
+it('should reject invalid integer encodings', () => {
+  expect(() => decode('i03e')).toThrow(/leading zero/);
+  expect(() => decode('i00e')).toThrow(/leading zero/);
+  expect(() => decode('i-0e')).toThrow(/Negative zero/);
+  expect(() => decode('i12+3e')).toThrow(/Invalid bencoded integer/);
+  expect(() => decode('i9007199254740992e')).toThrow(/safe integer range/);
+});
+
+it('should reject invalid or incomplete payloads', () => {
+  expect(() => decode('4:abc')).toThrow(/extends beyond/);
+  expect(() => decode('li1e')).toThrow(/Unexpected end of bencoded list/);
+  expect(() => decode('i1ei2e')).toThrow(/trailing/);
+  expect(() => decode('d1:bi1e1:ai2ee')).toThrow(/keys are not in strictly increasing order/);
+});
 
 it('should be able to decode a dictionary', () => {
   expect(decode('d3:cow3:moo4:spam4:eggse')).toEqual({
@@ -38,6 +41,25 @@ it('should be able to decode a dictionary', () => {
   });
 });
 
+it('should treat Object prototype property names as ordinary dictionary keys', () => {
+  const encoded = new TextEncoder().encode(
+    'd9:__proto__d8:pollutedi1ee11:constructori2e8:toStringi3ee',
+  );
+  const decoded = decode(encoded) as Record<string, unknown>;
+  const protoValue = decoded['__proto__'] as Record<string, unknown>;
+
+  expect(Object.getPrototypeOf(decoded)).toBeNull();
+  expect(Object.hasOwn(decoded, '__proto__')).toBe(true);
+  expect(Object.hasOwn(decoded, 'constructor')).toBe(true);
+  expect(Object.hasOwn(decoded, 'toString')).toBe(true);
+  expect(Object.getPrototypeOf(protoValue)).toBeNull();
+  expect(protoValue['polluted']).toBe(1);
+  expect(decoded.constructor).toBe(2);
+  expect(decoded.toString).toBe(3);
+  expect(({} as Record<string, unknown>)['polluted']).toBeUndefined();
+  expect(encode(decoded as any)).toEqual(encoded);
+});
+
 it('should be able to decode a list', () => {
   expect(decode('l4:spam4:eggse')).toEqual([
     new Uint8Array([115, 112, 97, 109]), // 'spam'
@@ -47,20 +69,3 @@ it('should be able to decode a list', () => {
 it('should return the correct type', () => {
   expect(decode('4:öö')).toBeTruthy();
 });
-
-// it('should be able to decode stuff in dicts', () => {
-//   const someData = {
-//     string: 'Hello World',
-//     integer: 12345,
-//     dict: {
-//       key: 'This is a string within a dictionary',
-//     },
-//     list: [1, 2, 3, 4, 'string', 5, {}],
-//   };
-//   const result = encode(someData);
-//   const dat: any = decode(result);
-//   expect(dat.integer).toBe(12345);
-//   expect(dat.string).toEqual('Hello World');
-//   expect(dat.dict.key).toEqual('This is a string within a dictionary');
-//   expect(dat.list).toEqual([1, 2, 3, 4, 'string', 5, {}]);
-// });
