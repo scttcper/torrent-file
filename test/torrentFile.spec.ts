@@ -15,6 +15,22 @@ it('should have the same hash as parse-torrent', async () => {
   const file = await fs.readFile(filepath);
   expect(hash(file)).toBe((await parseTorrent(file)).infoHash);
 });
+
+it('should reject noncanonical info bytes instead of hashing a re-encoded dictionary', () => {
+  const infoPrefix = new TextEncoder().encode('d6:pieces20:');
+  const infoSuffix = new TextEncoder().encode('6:lengthi0e4:name1:x12:piece lengthi16384ee');
+  const infoBytes = new Uint8Array(infoPrefix.length + 20 + infoSuffix.length);
+  infoBytes.set(infoPrefix);
+  infoBytes.set(infoSuffix, infoPrefix.length + 20);
+
+  const torrentPrefix = new TextEncoder().encode('d4:info');
+  const torrent = new Uint8Array(torrentPrefix.length + infoBytes.length + 1);
+  torrent.set(torrentPrefix);
+  torrent.set(infoBytes, torrentPrefix.length);
+  torrent[torrent.length - 1] = 'e'.charCodeAt(0);
+
+  expect(() => hash(torrent)).toThrow(/keys are not in strictly increasing order/);
+});
 it('should have the same name as parse-torrent', async () => {
   const file = await fs.readFile(filepath);
   expect(info(file).name).toEqual((await parseTorrent(file)).name);
@@ -53,4 +69,11 @@ it('should handle creation date', async () => {
 
   expect(torrentInfo.created).toBeInstanceOf(Date);
   expect(torrentInfo.created?.toISOString()).toBe('2019-02-14T22:53:17.000Z');
+});
+
+it('should preserve a Unix epoch creation date', () => {
+  const torrent = new TextEncoder().encode(
+    'd13:creation datei0e4:infod6:lengthi0e4:name1:x12:piece lengthi1e6:pieces0:ee',
+  );
+  expect(info(torrent).created?.toISOString()).toBe('1970-01-01T00:00:00.000Z');
 });

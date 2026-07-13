@@ -1,3 +1,5 @@
+import { cmpRawString, hasRawDictionaryKeys } from './utils.js';
+
 export type bencodeValue =
   | string
   | Uint8Array
@@ -47,15 +49,14 @@ const encodeBuf = (buf: Uint8Array): Uint8Array => {
 };
 
 const encodeNumber = (num: number): Uint8Array => {
-  const int = Math.floor(num);
-  if (int !== num) {
-    throw new Error(`bencode only support integers, got ${num}`);
+  if (!Number.isSafeInteger(num)) {
+    throw new TypeError(`bencode only supports safe integers, got ${num}`);
   }
 
-  return te.encode(`i${int}e`);
+  return te.encode(`i${num}e`);
 };
 
-// Inverse of Decoder.nextKeyLatin1 — see decode.ts for rationale.
+// Inverse of Decoder.nextKeyLatin1 for dictionaries decoded from binary data.
 const encodeKeyLatin1 = (key: string): Uint8Array => {
   const lengthStr = key.length.toString();
   const result = new Uint8Array(lengthStr.length + 1 + key.length);
@@ -69,13 +70,27 @@ const encodeKeyLatin1 = (key: string): Uint8Array => {
   return result;
 };
 
+const isAscii = (value: string): boolean => {
+  for (let i = 0; i < value.length; i++) {
+    if (value.charCodeAt(i) > 0x7f) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
 const encodeDictionary = (obj: Record<string, bencodeValue>): Uint8Array => {
-  const keys = Object.keys(obj).sort();
+  const keys = Object.keys(obj);
+  // Decoded binary dictionaries must retain their raw bytes. Newly constructed
+  // non-ASCII dictionaries are textual and use UTF-8 byte ordering/encoding.
+  const usesRawKeys = hasRawDictionaryKeys(obj) || keys.every(isAscii);
+  keys.sort(usesRawKeys ? undefined : cmpRawString);
   const parts: Uint8Array[] = new Array(keys.length * 2 + 2); // eslint-disable-line unicorn/no-new-array
   parts[0] = BYTE_d;
   let i = 1;
   for (const key of keys) {
-    parts[i++] = encodeKeyLatin1(key);
+    parts[i++] = usesRawKeys ? encodeKeyLatin1(key) : encodeString(key);
     parts[i++] = encode(obj[key]!);
   }
 

@@ -1,2 +1,2 @@
-export * from './decode.js';
+export { decode } from './decode.js';
 export * from './encode.js';

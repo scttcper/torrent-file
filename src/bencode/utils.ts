@@ -1,8 +1,22 @@
+const te = new TextEncoder();
+
+const rawDictionaryKeys = Symbol('rawDictionaryKeys');
+
+// Non-enumerable marker used to distinguish decoded arbitrary-byte keys from
+// newly constructed textual keys without changing the public object shape.
+export function markRawDictionaryKeys<T extends object>(dictionary: T): T {
+  Object.defineProperty(dictionary, rawDictionaryKeys, { value: true });
+  return dictionary;
+}
+
+export function hasRawDictionaryKeys(dictionary: object): boolean {
+  return Object.hasOwn(dictionary, rawDictionaryKeys);
+}
+
 // str1 > str2: 1
 // str1 === str2: 0
 // str1 < str2: -1
 export const cmpRawString = (str1: string, str2: string): number => {
-  const te = new TextEncoder();
   const v1 = te.encode(str1);
   const v2 = te.encode(str2);
 
