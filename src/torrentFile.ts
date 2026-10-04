@@ -31,15 +31,15 @@ const toString = (value: any): string => {
 };
 
 export const sha1 = (input: Uint8Array): string => {
-  const hash = createHash('sha1');
-  hash.update(input);
-  return hash.digest('hex');
+  const hasher = createHash('sha1');
+  hasher.update(input);
+  return hasher.digest('hex');
 };
 
 export const sha256 = (input: Uint8Array): string => {
-  const hash = createHash('sha256');
-  hash.update(input);
-  return hash.digest('hex');
+  const hasher = createHash('sha256');
+  hasher.update(input);
+  return hasher.digest('hex');
 };
 
 export type TorrentVersion = 'v1' | 'v2' | 'hybrid';
@@ -363,14 +363,14 @@ export function files(file: Uint8Array): TorrentFileData {
       }
 
       const prefix = name + sep;
-      for (const file of result.files) {
+      for (const entry of result.files) {
         // v1 paths include the torrent name prefix; v2 file tree paths don't
-        const relativePath = file.path.startsWith(prefix)
-          ? file.path.slice(prefix.length)
-          : file.path;
+        const relativePath = entry.path.startsWith(prefix)
+          ? entry.path.slice(prefix.length)
+          : entry.path;
         const root = v2ByPath.get(relativePath);
         if (root) {
-          file.piecesRoot = toHex(root);
+          entry.piecesRoot = toHex(root);
         }
       }
     }

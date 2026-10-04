@@ -1,4 +1,4 @@
 packages:
   - demo
-onlyBuiltDependencies:
-  - esbuild
+allowBuilds:
+  esbuild: true
