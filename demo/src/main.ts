@@ -37,6 +37,13 @@ async function handleTorrentFile(file: File) {
   setText('raw', formatJson({ info: i, files: f, hashes: h }));
 }
 
+function onFiles(list: FileList | null) {
+  const file = list && list[0];
+  if (file) {
+    void handleTorrentFile(file);
+  }
+}
+
 function setupDragAndDrop() {
   const dropzone = document.getElementById('dropzone');
   const input = document.getElementById('fileInput') as HTMLInputElement | null;
@@ -44,13 +51,6 @@ function setupDragAndDrop() {
   if (!dropzone) {
     return;
   }
-
-  const onFiles = (list: FileList | null) => {
-    const file = list && list[0];
-    if (file) {
-      void handleTorrentFile(file);
-    }
-  };
 
   dropzone.addEventListener('dragover', e => {
     e.preventDefault();
